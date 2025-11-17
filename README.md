@@ -125,11 +125,6 @@ Pemilik venue adalah pengguna yang memiliki atau mengelola lapangan padel dan me
 
 ---
 
-## Link PWS:
-https://sean-marcello-sportspace.pbp.cs.ui.ac.id
-
----
-
 ## Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web: 
 ...
 
