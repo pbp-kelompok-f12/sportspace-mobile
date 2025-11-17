@@ -12,6 +12,7 @@ Setelah menemukan lapangan yang sesuai, pengguna cukup memilih tanggal dan waktu
 Pemilik lapangan tetap mengatur venue melalui dashboard web, mulai dari pembaruan jadwal hingga pengelolaan informasi venue. Admin bertugas memastikan seluruh data pengguna, venue, dan pemesanan tetap valid sehingga sistem berjalan dengan lancar.
 
 Dengan hadirnya aplikasi mobile yang terhubung ke backend web, SportSpace membuat proses pencarian dan pemesanan lapangan padel menjadi lebih mudah, cepat, dan terorganisir. Platform ini diharapkan dapat turut mendorong perkembangan minat masyarakat terhadap olahraga padel yang semakin populer di Indonesia.
+
 ---
 
 
