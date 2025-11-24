@@ -126,7 +126,15 @@ Pemilik venue adalah pengguna yang memiliki atau mengelola lapangan padel dan me
 ---
 
 ## Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web: 
-...
+Aplikasi mobile SportSpace terhubung dengan backend Django melalui pertukaran data JSON menggunakan protokol HTTP. Berikut adalah mekanisme utamanya:
+
+REST API pada Django: Kami membuat endpoint URL khusus di Django yang mengembalikan data dalam format JSON (bukan HTML) agar dapat dibaca oleh aplikasi mobile.
+
+Model & Fetch Data (GET): Flutter mengambil data dari endpoint tersebut menggunakan request HTTP secara asynchronous, lalu melakukan parsing dari format JSON menjadi objek Model Dart untuk ditampilkan di antarmuka.
+
+Pengiriman Data (POST): Input pengguna (seperti login, register, atau booking lapangan) dikirim dari Flutter ke server Django menggunakan method POST untuk diproses dan disimpan ke database.
+
+Autentikasi: Kami memanfaatkan package pbp_django_auth untuk menangani manajemen sesi, cookie, dan keamanan akses pengguna antara aplikasi mobile dan server.
 
 ## Link Figma:
 https://www.figma.com/design/l9BHzrt0pbzk2A2LmNuljg/SportSpace?node-id=36-8&p=f&t=gkVS2c8acblkHXDI-0
