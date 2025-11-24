@@ -29,23 +29,35 @@ Dengan hadirnya aplikasi mobile yang terhubung ke backend web, SportSpace membua
 
 ## Daftar modul yang diimplementasikan
 - **Autentikasi dan Profil**  
+  Dikerjakan oleh Sean Marcello Maheron.
+  
   Modul ini menangani proses registrasi, login, dan manajemen akun pengguna. Pengguna dapat memperbarui profil seperti nama, foto, dan informasi kontak. Sistem juga mengatur hak akses berdasarkan jenis pengguna (admin, penyewa, pemilik venue). Selain pengaturan identitas dasar, modul ini juga memungkinkan pengguna untuk menambahkan teman serta saling mengirim pesan, sehingga interaksi antar pengguna dapat terjalin langsung melalui platform.
 
 - **Panel Admin**  
+  Dikerjakan oleh Sean Marcello Maheron.
+
   Modul Panel Admin menyediakan dashboard terpusat yang digunakan admin untuk mengelola seluruh data dalam sistem. Melalui panel ini, admin dapat memverifikasi akun pemilik venue serta memonitor aktivitas pada platform melalui tampilan yang ringkas dan informatif. Setiap fungsi disajikan dalam bentuk kontrol dan menu yang memudahkan admin meninjau data, melakukan penyesuaian, serta memastikan seluruh proses dalam platform berjalan dengan baik. Modul ini menjadi pusat kendali utama yang memberikan gambaran menyeluruh mengenai kondisi aplikasi.
 
 - **Booking dan Jadwal**  
+  Dikerjakan oleh I Gusti Ngurah Agung Airlangga Putra.
+
   Modul ini memungkinkan pengguna melakukan pemesanan lapangan berdasarkan tanggal dan waktu yang tersedia. Sistem akan menolak jadwal yang bentrok dan menampilkan status pemesanan (aktif, selesai, atau dibatalkan).
 
 - **Review**  
+  Dikerjakan oleh Tasya Nabila Anggita Saragih.
+
   Modul ini memungkinkan pengguna memberikan ulasan dan rating setelah bermain di lapangan padel. Ulasan ini dapat membantu pengguna lain dalam memilih venue terbaik.
 
 - **Lapangan & Halaman Utama**  
+    Dikerjakan oleh Fidel Akilah.
+
     Modul ini menampilkan daftar lapangan padel berdasarkan daerah yang dipilih pengguna. Lokasi lapangan ditampilkan melalui integrasi Google Maps API untuk memberikan gambaran posisi venue secara visual. Setiap lapangan terhubung langsung dengan fitur booking dan review, sehingga pengguna dapat melihat ketersediaan jadwal serta ulasan dari pemain lain sebelum melakukan pemesanan. Data lapangan dikelola oleh pemilik melalui dashboard web, termasuk pembaruan harga, fasilitas, dan foto, yang kemudian tersinkron otomatis ke aplikasi.
 
 - **Matchmaking**
-    Modul matchmaking memungkinkan pengguna membuat sebuah match yang terbuka untuk diikuti pemain lain. Pengguna dapat menentukan jenis permainan seperti 1v1, 2v2, atau 4v4, kemudian pemain lain dapat melihat match yang tersedia dan bergabung sesuai kebutuhan slot. Setiap match menampilkan informasi dasar seperti daerah dan format permainan, sehingga pengguna dapat memilih match yang sesuai sebelum bergabung. Modul ini berfungsi sebagai wadah untuk mempertemukan pemain padel yang ingin bermain bersama dalam format yang mereka inginkan.
+ 
+    Dikerjakan oleh Philo Pradipta Adhi Satriya.
 
+    Modul matchmaking memungkinkan pengguna membuat sebuah match yang terbuka untuk diikuti pemain lain. Pengguna dapat menentukan jenis permainan seperti 1v1, 2v2, atau 4v4, kemudian pemain lain dapat melihat match yang tersedia dan bergabung sesuai kebutuhan slot. Setiap match menampilkan informasi dasar seperti daerah dan format permainan, sehingga pengguna dapat memilih match yang sesuai sebelum bergabung. Modul ini berfungsi sebagai wadah untuk mempertemukan pemain padel yang ingin bermain bersama dalam format yang mereka inginkan.
 ---
 
 ## Timeline Pengerjaan SportSpace Mobile App
@@ -88,40 +100,28 @@ Dengan hadirnya aplikasi mobile yang terhubung ke backend web, SportSpace membua
 ---
 ## Jenis Pengguna dan Perannya
 
-Website penyewaan lapangan padel ini memiliki tiga jenis pengguna utama: **Admin**, **Penyewa (User)**, dan **Pemilik Venue**.  
-Semua pihak tersebut termasuk dalam kategori *user* karena sama-sama memiliki akun dan dapat login ke sistem, tetapi memiliki **peran serta hak akses yang berbeda**.
+Website penyewaan lapangan padel ini memiliki tiga jenis pengguna utama: **Admin**, **Penyewa (User)**.  
 
 ### 1. **Admin**
 **Peran:**  
-Admin bertanggung jawab atas pengelolaan dan pengawasan seluruh aktivitas di dalam sistem. Mereka memiliki akses penuh untuk memantau data pengguna, venue, dan transaksi.
+Admin bertanggung jawab atas pengelolaan dan pengawasan seluruh aktivitas di dalam sistem. Mereka memiliki akses penuh untuk memantau data pengguna, venue, dan aktivitas booking.
 
 **Tugas dan Hak Akses:**
-- Memverifikasi pendaftaran akun pemilik venue.  
 - Mengelola data pengguna (menonaktifkan atau menghapus akun).  
-- Memantau transaksi dan aktivitas penyewaan.  
-- Mengelola konten utama seperti banner atau pengumuman.  
+- Mengelola aktivitas penyewaan.  
+- Mengelola semua venua yang terdaftar di aplikasi.  
 
 ### 2. **Penyewa (User)**
 **Peran:**  
 Penyewa adalah pengguna umum yang menggunakan website untuk mencari dan menyewa lapangan padel.
 
-**Tugas dan Hak Akses:**
-- Menelusuri daftar lapangan padel melalui peta interaktif (Google Maps).  
-- Melihat detail venue (lokasi, fasilitas, harga, dan jadwal ketersediaan).  
-- Melakukan pemesanan (booking) dan pembayaran online.  
+**Tugas dan Hak Akses:** 
+- Melihat detail venue (lokasi, harga, dan jadwal ketersediaan).  
+- Melakukan pemesanan (booking).
 - Melihat status serta riwayat pemesanan.  
 - Memberikan ulasan dan rating setelah bermain.  
-
-
-### 3. **Pemilik Venue**
-**Peran:**  
-Pemilik venue adalah pengguna yang memiliki atau mengelola lapangan padel dan menggunakan website untuk menawarkan lapangannya kepada penyewa.
-
-**Tugas dan Hak Akses:**
-- Mendaftarkan venue baru dengan data lengkap (alamat, harga, fasilitas, foto).  
-- Mengatur jadwal ketersediaan dan jam operasional lapangan.  
-- Melihat serta mengonfirmasi pesanan dari penyewa.  
-- Mengelola harga dan status lapangan.     
+- Membuat match yang bisa diikuti pengguna lain.
+- Mengubah profile dan menambahkan teman.
 
 ---
 
