@@ -46,7 +46,7 @@ Dengan hadirnya aplikasi mobile yang terhubung ke backend web, SportSpace membua
 - **Review**  
   Dikerjakan oleh Tasya Nabila Anggita Saragih.
 
-  Modul ini memungkinkan pengguna memberikan ulasan dan rating setelah bermain di lapangan padel. Ulasan ini dapat membantu pengguna lain dalam memilih venue terbaik.
+  Modul ini memungkinkan pengguna memberikan ulasan dan rating setelah bermain di lapangan padel. Ulasan ini dapat membantu pengguna lain dalam memilih venue terbaik. Setiap pengguna dapat memberikan 1 review untuk setiap lapangan yang ada. Terdapat menu My Reviews yang berisikan review-review yang telah diberikan oleh pengguna yang terautentikasi dan menu Venue Reviews yang berisikan review-review suatu venue. Pengguna juga dapat memberikan review secara anonim sehingga privasi pengguna lebih terjamin.
 
 - **Lapangan & Halaman Utama**  
     Dikerjakan oleh Fidel Akilah.
