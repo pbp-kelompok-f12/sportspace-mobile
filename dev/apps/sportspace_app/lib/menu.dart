@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/homepage.dart';
 
 class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
@@ -122,14 +123,24 @@ class ItemCard extends StatelessWidget {
     return Material(
       color: Theme.of(context).colorScheme.secondary,
       borderRadius: BorderRadius.circular(12),
-
       child: InkWell(
         onTap: () {
+          // Show the snackbar (Optional, you can keep or remove this)
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
                 SnackBar(content: Text("Kamu telah menekan tombol ${item.name}!"))
             );
+
+          // --- NAVIGATION LOGIC ---
+          if (item.name == "See Padel Courts") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const HomePage(), // Ensure HomePage matches the class name in homepage.dart
+              ),
+            );
+          }
         },
         child: Container(
           padding: const EdgeInsets.all(8),
