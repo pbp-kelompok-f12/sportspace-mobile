@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -105,11 +106,11 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     try {
       final updateResponse = await request.postJson(
         "$baseUrl/booking/api/update-booking/${booking["id"]}/",
-        {
+        jsonEncode({
           "customer_name": nameController.text,
           "customer_email": emailController.text,
           "customer_phone": phoneController.text,
-        },
+        }),
       );
       if (updateResponse["success"] == true) {
         messenger
@@ -169,7 +170,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     try {
       final deleteResponse = await request.postJson(
         "$baseUrl/booking/api/delete-booking-post/${booking["id"]}/",
-        {},
+        jsonEncode({}),
       );
       if (deleteResponse["success"] == true) {
         messenger

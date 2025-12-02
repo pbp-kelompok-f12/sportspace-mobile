@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +22,7 @@ class BookingDetailPage extends StatefulWidget {
 }
 
 class _BookingDetailPageState extends State<BookingDetailPage> {
-  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
+  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/";
 
   late Future<Map<String, dynamic>> _slotsFuture;
   String _selectedDate = "";
@@ -65,6 +66,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
   void _reloadForDate(String date) {
     final request = context.read<CookieRequest>();
     setState(() {
+      _selectedDate = date;
       _slotsFuture = _fetchSlots(request, date);
     });
   }
@@ -156,7 +158,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
 
       final createResponse = await request.postJson(
         "$baseUrl/booking/api/create-booking/",
-        {
+        jsonEncode({
           "venue_id": venueId,
           "booking_date": _selectedDate,
           "start_time": slot["start_time"],
@@ -164,7 +166,7 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
           "customer_name": nameController.text,
           "customer_email": emailController.text,
           "customer_phone": phoneController.text,
-        },
+        }),
       );
 
       if (createResponse["success"] == true) {
@@ -223,6 +225,11 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
 
           final data = snapshot.data!;
           final List<dynamic> slots = data["time_slots"] ?? [];
+
+          // Generate 7-day date options (today + 6 days) like the website
+          final DateTime today = DateTime.now();
+          final List<DateTime> next7Days =
+              List.generate(7, (i) => today.add(Duration(days: i)));
 
           return SingleChildScrollView(
             child: Column(
@@ -306,9 +313,38 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        "Tanggal: $_selectedDate",
-                        style: const TextStyle(color: Colors.grey),
+                      SizedBox(
+                        height: 40,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: next7Days.length,
+                          itemBuilder: (context, index) {
+                            final day = next7Days[index];
+                            final String dateStr =
+                                "${day.year.toString().padLeft(4, '0')}-"
+                                "${day.month.toString().padLeft(2, '0')}-"
+                                "${day.day.toString().padLeft(2, '0')}";
+                            final bool isSelected = dateStr == _selectedDate;
+                            final String label = index == 0
+                                ? "Hari Ini"
+                                : "${day.day}/${day.month}";
+
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ChoiceChip(
+                                label: Text(label),
+                                selected: isSelected,
+                                onSelected: (_) => _reloadForDate(dateStr),
+                                selectedColor: Colors.blue.shade600,
+                                labelStyle: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                       const SizedBox(height: 12),
                       GridView.builder(

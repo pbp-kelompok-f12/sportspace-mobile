@@ -63,7 +63,7 @@ class _HomePageState extends State<HomePage> {
   ];
 
   // Base URL aplikasi web SportSpace (deployment PBP)
-  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
+  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/";
 
   // Cache data agar tidak reload terus saat ketik search
   late Future<List<Lapangan>> _lapanganFuture;
