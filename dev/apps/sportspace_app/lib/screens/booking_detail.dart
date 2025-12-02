@@ -22,7 +22,7 @@ class BookingDetailPage extends StatefulWidget {
 }
 
 class _BookingDetailPageState extends State<BookingDetailPage> {
-  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/";
+  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
 
   late Future<Map<String, dynamic>> _slotsFuture;
   String _selectedDate = "";
