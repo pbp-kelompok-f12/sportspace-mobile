@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'dart:convert';
+import 'booking_detail.dart';
+import 'my_bookings.dart';
 
 // --- 1. MODEL DATA ---
 class Lapangan {
@@ -45,6 +46,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  static const int _tabHome = 0;
+  static const int _tabBookings = 1;
   
   // State untuk Search dan Filter
   final TextEditingController _searchController = TextEditingController();
@@ -59,8 +62,8 @@ class _HomePageState extends State<HomePage> {
     'Jakarta Utara'
   ];
 
-  // Sesuaikan URL ini dengan IP komputer Anda
-  final String baseUrl = "http://127.0.0.1:8000";
+  // Base URL aplikasi web SportSpace (deployment PBP)
+  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
 
   // Cache data agar tidak reload terus saat ketik search
   late Future<List<Lapangan>> _lapanganFuture;
@@ -109,31 +112,9 @@ class _HomePageState extends State<HomePage> {
     final Color darkBlue = const Color(0xFF0D2C3E);
     final Color bottomNavBlue = const Color(0xFF90CAF9);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: darkBlue,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0), // Padding agar logo tidak terlalu mepet
-          child: CircleAvatar(
-            backgroundColor: Colors.white, // Warna background jika logo transparan
-            // Ganti 'assets/images/logo_sportspace.png' dengan path/nama file logo Anda
-            backgroundImage: const AssetImage('assets/images/logosportspace.png'),
-          ),
-        ),
-        title: const Text(
-          "SportSpace",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: FutureBuilder<List<Lapangan>>(
+    Widget bodyContent;
+    if (_selectedIndex == _tabHome) {
+      bodyContent = FutureBuilder<List<Lapangan>>(
         future: _lapanganFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -147,16 +128,20 @@ class _HomePageState extends State<HomePage> {
           final allCourtsRaw = snapshot.data!;
 
           // 1. Logic Recommended (Fallback ke 5 item pertama jika tidak ada yang featured)
-          List<Lapangan> recommendedCourts = allCourtsRaw.where((l) => l.isFeatured).toList();
+          List<Lapangan> recommendedCourts =
+              allCourtsRaw.where((l) => l.isFeatured).toList();
           if (recommendedCourts.isEmpty && allCourtsRaw.isNotEmpty) {
             recommendedCourts = allCourtsRaw.take(5).toList();
           }
 
           // 2. Logic Filter "All Courts" berdasarkan Search & Lokasi
           final filteredCourts = allCourtsRaw.where((court) {
-            final nameMatches = court.nama.toLowerCase().contains(_searchKeyword.toLowerCase());
-            final locationMatches = _selectedLocation == null || 
-                                    court.alamat.toLowerCase().contains(_selectedLocation!.toLowerCase());
+            final nameMatches =
+                court.nama.toLowerCase().contains(_searchKeyword.toLowerCase());
+            final locationMatches = _selectedLocation == null ||
+                court.alamat
+                    .toLowerCase()
+                    .contains(_selectedLocation!.toLowerCase());
             return nameMatches && locationMatches;
           }).toList();
 
@@ -191,7 +176,8 @@ class _HomePageState extends State<HomePage> {
                       padding: const EdgeInsets.only(left: 16),
                       itemCount: recommendedCourts.length,
                       itemBuilder: (context, index) {
-                        return RecommendedCard(lapangan: recommendedCourts[index]);
+                        return RecommendedCard(
+                            lapangan: recommendedCourts[index]);
                       },
                     ),
                   ),
@@ -209,12 +195,15 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                
+
                 // Tampilkan pesan jika hasil pencarian kosong
                 if (filteredCourts.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Text("No courts found matching your search.", style: TextStyle(color: Colors.grey)),
+                    child: Text(
+                      "No courts found matching your search.",
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   )
                 else
                   ListView.builder(
@@ -231,7 +220,40 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         },
+      );
+    } else if (_selectedIndex == _tabBookings) {
+      bodyContent = const MyBookingsPage();
+    } else {
+      bodyContent = const Center(
+        child: Text("Coming soon..."),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: darkBlue,
+        elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0), // Padding agar logo tidak terlalu mepet
+          child: CircleAvatar(
+            backgroundColor: Colors.white, // Warna background jika logo transparan
+            // Ganti 'assets/images/logo_sportspace.png' dengan path/nama file logo Anda
+            backgroundImage: const AssetImage('assets/images/logosportspace.png'),
+          ),
+        ),
+        title: const Text(
+          "SportSpace",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+            onPressed: () {},
+          ),
+        ],
       ),
+      body: bodyContent,
       
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -520,7 +542,9 @@ class AllCourtCard extends StatelessWidget {
                       child: SizedBox(
                         height: 32,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            // TODO: Navigate to review page if available
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF64B5F6),
                             padding: EdgeInsets.zero,
@@ -529,7 +553,10 @@ class AllCourtCard extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text("Review", style: TextStyle(color: Colors.white, fontSize: 12)),
+                          child: const Text(
+                            "Review",
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
                         ),
                       ),
                     ),
@@ -538,7 +565,19 @@ class AllCourtCard extends StatelessWidget {
                       child: SizedBox(
                         height: 32,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BookingDetailPage(
+                                  lapanganPk: lapangan.pk,
+                                  nama: lapangan.nama,
+                                  alamat: lapangan.alamat,
+                                  imageUrl: lapangan.thumbnail,
+                                ),
+                              ),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF7CB342),
                             padding: EdgeInsets.zero,
@@ -547,7 +586,10 @@ class AllCourtCard extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text("Book", style: TextStyle(color: Colors.white, fontSize: 12)),
+                          child: const Text(
+                            "Book",
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
                         ),
                       ),
                     ),
