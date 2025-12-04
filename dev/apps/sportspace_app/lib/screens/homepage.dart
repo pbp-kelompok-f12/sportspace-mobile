@@ -3,39 +3,9 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'booking_detail.dart';
 import 'my_bookings.dart';
-
-// --- 1. MODEL DATA ---
-class Lapangan {
-  final int pk;
-  final String nama;
-  final String alamat;
-  final double rating;
-  final String thumbnail;
-  final bool isFeatured;
-
-  Lapangan({
-    required this.pk,
-    required this.nama,
-    required this.alamat,
-    required this.rating,
-    required this.thumbnail,
-    required this.isFeatured,
-  });
-
-  factory Lapangan.fromJson(Map<String, dynamic> json) {
-    final fields = json['fields'];
-    return Lapangan(
-      pk: json['pk'],
-      nama: fields['nama'] ?? "Tanpa Nama",
-      alamat: fields['alamat'] ?? "Alamat tidak tersedia",
-      rating: fields['rating'] != null
-          ? (fields['rating'] as num).toDouble()
-          : 0.0,
-      thumbnail: fields['thumbnail_url'] ?? "",
-      isFeatured: fields['is_featured'] ?? false,
-    );
-  }
-}
+import 'package:sportspace_app/screens/venue_form.dart';
+import 'package:sportspace_app/screens/venue_list.dart';
+import 'package:sportspace_app/models/lapangan.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -46,32 +16,32 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  // Konstanta untuk tab index
   static const int _tabHome = 0;
   static const int _tabBookings = 1;
-  
+
   // State untuk Search dan Filter
   final TextEditingController _searchController = TextEditingController();
   String _searchKeyword = "";
-  String? _selectedLocation; // Null artinya "Pilih Lokasi" (Semua)
+  String? _selectedLocation;
 
   final List<String> _locations = [
     'Jakarta Selatan',
     'Jakarta Pusat',
     'Jakarta Barat',
     'Jakarta Timur',
-    'Jakarta Utara'
+    'Jakarta Utara',
   ];
 
-  // Base URL aplikasi web SportSpace (deployment PBP)
-  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
+  // --- PERBAIKAN 1: IP Address ---
+  // Gunakan 10.0.2.2 untuk Android Emulator
+  final String baseUrl = "http://127.0.0.1:8000"; 
 
-  // Cache data agar tidak reload terus saat ketik search
   late Future<List<Lapangan>> _lapanganFuture;
 
   @override
   void initState() {
     super.initState();
-    // Kita panggil fetch di awal, nanti bisa di refresh jika perlu
   }
 
   @override
@@ -81,7 +51,6 @@ class _HomePageState extends State<HomePage> {
     _lapanganFuture = fetchLapangans(request);
   }
 
-  // --- LOGIC FETCH DATA ---
   Future<List<Lapangan>> fetchLapangans(CookieRequest request) async {
     final response = await request.get('$baseUrl/home/api/lapangan/');
     List<Lapangan> listLapangan = [];
@@ -99,7 +68,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // Fungsi untuk melakukan pencarian (dipanggil saat tombol Search ditekan)
   void _performSearch() {
     setState(() {
       _searchKeyword = _searchController.text.trim();
@@ -108,12 +76,15 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Warna Desain
     final Color darkBlue = const Color(0xFF0D2C3E);
     final Color bottomNavBlue = const Color(0xFF90CAF9);
 
+    // --- PERBAIKAN 2: Logika Navigasi ---
+    // Kita tentukan isi "body" berdasarkan _selectedIndex SEBELUM masuk ke Scaffold
     Widget bodyContent;
+
     if (_selectedIndex == _tabHome) {
+      // ISI HALAMAN HOME
       bodyContent = FutureBuilder<List<Lapangan>>(
         future: _lapanganFuture,
         builder: (context, snapshot) {
@@ -127,21 +98,23 @@ class _HomePageState extends State<HomePage> {
 
           final allCourtsRaw = snapshot.data!;
 
-          // 1. Logic Recommended (Fallback ke 5 item pertama jika tidak ada yang featured)
-          List<Lapangan> recommendedCourts =
-              allCourtsRaw.where((l) => l.isFeatured).toList();
+          // Logic Recommended
+          List<Lapangan> recommendedCourts = allCourtsRaw
+              .where((l) => l.isFeatured)
+              .toList();
           if (recommendedCourts.isEmpty && allCourtsRaw.isNotEmpty) {
             recommendedCourts = allCourtsRaw.take(5).toList();
           }
 
-          // 2. Logic Filter "All Courts" berdasarkan Search & Lokasi
+          // Logic Filter
           final filteredCourts = allCourtsRaw.where((court) {
-            final nameMatches =
-                court.nama.toLowerCase().contains(_searchKeyword.toLowerCase());
+            final nameMatches = court.nama.toLowerCase().contains(
+              _searchKeyword.toLowerCase(),
+            );
             final locationMatches = _selectedLocation == null ||
-                court.alamat
-                    .toLowerCase()
-                    .contains(_selectedLocation!.toLowerCase());
+                court.alamat.toLowerCase().contains(
+                  _selectedLocation!.toLowerCase(),
+                );
             return nameMatches && locationMatches;
           }).toList();
 
@@ -149,13 +122,10 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // SEARCH SECTION (Sekarang Stateful)
                 _buildSearchSection(darkBlue),
-
                 const SizedBox(height: 20),
-
-                // RECOMMENDED SECTION
-                // Hanya muncul jika data recommended ada
+                
+                // Recommended Section
                 if (recommendedCourts.isNotEmpty) ...[
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -177,26 +147,43 @@ class _HomePageState extends State<HomePage> {
                       itemCount: recommendedCourts.length,
                       itemBuilder: (context, index) {
                         return RecommendedCard(
-                            lapangan: recommendedCourts[index]);
+                          lapangan: recommendedCourts[index],
+                        );
                       },
                     ),
                   ),
                 ],
 
-                // ALL COURTS SECTION (Hasil Filter)
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
-                  child: Text(
-                    "All Courts",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0D2C3E),
-                    ),
+                // All Courts Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "All Courts",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0D2C3E),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const VenueListPage(isMyVenue: false),
+                            ),
+                          );
+                        },
+                        child: const Text("See All"),
+                      ),
+                    ],
                   ),
                 ),
 
-                // Tampilkan pesan jika hasil pencarian kosong
                 if (filteredCourts.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(16.0),
@@ -222,8 +209,10 @@ class _HomePageState extends State<HomePage> {
         },
       );
     } else if (_selectedIndex == _tabBookings) {
+      // ISI HALAMAN BOOKINGS
       bodyContent = const MyBookingsPage();
     } else {
+      // ISI HALAMAN LAIN (Placeholder)
       bodyContent = const Center(
         child: Text("Coming soon..."),
       );
@@ -235,10 +224,9 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: darkBlue,
         elevation: 0,
         leading: Padding(
-          padding: const EdgeInsets.all(8.0), // Padding agar logo tidak terlalu mepet
+          padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
-            backgroundColor: Colors.white, // Warna background jika logo transparan
-            // Ganti 'assets/images/logo_sportspace.png' dengan path/nama file logo Anda
+            backgroundColor: Colors.white,
             backgroundImage: const AssetImage('assets/images/logosportspace.png'),
           ),
         ),
@@ -253,12 +241,27 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: bodyContent,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const VenueFormPage()),
+          );
+        },
+        backgroundColor: const Color(0xFF7CB342),
+        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Add Venue',
+      ),
       
+      // Di sini kita panggil variabel bodyContent yang sudah di-set logic di atas
+      body: bodyContent, 
+
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: bottomNavBlue,
-          border: const Border(top: BorderSide(color: Colors.black12, width: 0.5)),
+          border: const Border(
+            top: BorderSide(color: Colors.black12, width: 0.5),
+          ),
         ),
         child: BottomNavigationBar(
           backgroundColor: bottomNavBlue,
@@ -271,8 +274,14 @@ class _HomePageState extends State<HomePage> {
           onTap: _onItemTapped,
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Bookings'),
-            BottomNavigationBarItem(icon: Icon(Icons.sports_tennis), label: 'Match'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.assignment),
+              label: 'Bookings', // Tab baru dari teman Anda
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.sports_tennis),
+              label: 'Match',
+            ),
             BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Reviews'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],
@@ -283,13 +292,10 @@ class _HomePageState extends State<HomePage> {
 
   // WIDGET SEARCH SECTION
   Widget _buildSearchSection(Color darkBlue) {
+    // ... (Kode Search Section sama seperti sebelumnya, tidak perlu diubah)
     return Stack(
       children: [
-        Container(
-          height: 100,
-          width: double.infinity,
-          color: darkBlue,
-        ),
+        Container(height: 100, width: double.infinity, color: darkBlue),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           padding: const EdgeInsets.all(16),
@@ -316,8 +322,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 12),
-              
-              // Search Input dengan Controller
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
@@ -331,10 +335,9 @@ class _HomePageState extends State<HomePage> {
                     borderSide: BorderSide.none,
                   ),
                 ),
-                onSubmitted: (_) => _performSearch(), // Search saat enter ditekan
+                onSubmitted: (_) => _performSearch(),
               ),
               const SizedBox(height: 12),
-              
               Row(
                 children: [
                   Expanded(
@@ -351,7 +354,6 @@ class _HomePageState extends State<HomePage> {
                           hint: const Text("Pilih Lokasi"),
                           value: _selectedLocation,
                           icon: const Icon(Icons.keyboard_arrow_down),
-                          // Menambahkan opsi "Pilih Lokasi" untuk reset filter
                           items: [
                             const DropdownMenuItem<String>(
                               value: null,
@@ -367,8 +369,6 @@ class _HomePageState extends State<HomePage> {
                           onChanged: (String? newValue) {
                             setState(() {
                               _selectedLocation = newValue;
-                              // Jika ingin langsung search saat ganti lokasi, uncomment baris bawah:
-                              // _performSearch(); 
                             });
                           },
                         ),
@@ -379,7 +379,7 @@ class _HomePageState extends State<HomePage> {
                   Expanded(
                     flex: 1,
                     child: ElevatedButton(
-                      onPressed: _performSearch, // Panggil fungsi search
+                      onPressed: _performSearch,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF5C9DFF),
                         shape: RoundedRectangleBorder(
@@ -400,6 +400,19 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+// --- PERBAIKAN 3: PROXY URL IP ---
+// Pastikan ini juga menggunakan 10.0.2.2
+String getProxyUrl(String originalUrl) {
+  if (originalUrl.isEmpty) {
+    return "https://via.placeholder.com/150";
+  }
+  
+  String encodedUrl = Uri.encodeComponent(originalUrl);
+
+  // Gunakan 10.0.2.2 untuk Android Emulator
+  return "http://127.0.0.1:8000/home/proxy-image/?url=$encodedUrl";
+}
+
 // --- WIDGET CARD: RECOMMENDED ---
 class RecommendedCard extends StatelessWidget {
   final Lapangan lapangan;
@@ -408,6 +421,8 @@ class RecommendedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String imageUrl = getProxyUrl(lapangan.thumbnail);
+
     return Container(
       width: 180,
       margin: const EdgeInsets.only(right: 16),
@@ -419,7 +434,10 @@ class RecommendedCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20), bottom: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(20),
+              bottom: Radius.circular(20),
+            ),
             child: Container(
               height: 120,
               width: double.infinity,
@@ -428,14 +446,14 @@ class RecommendedCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Image.network(
-                lapangan.thumbnail.isNotEmpty
-                    ? lapangan.thumbnail
-                    : "https://via.placeholder.com/150",
+                imageUrl, 
                 fit: BoxFit.cover,
-                errorBuilder: (ctx, _, __) => Container(
-                  color: Colors.grey,
-                  child: const Icon(Icons.broken_image, color: Colors.white),
-                ),
+                errorBuilder: (ctx, _, __) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                  );
+                },
               ),
             ),
           ),
@@ -482,6 +500,8 @@ class AllCourtCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String imageUrl = getProxyUrl(lapangan.thumbnail);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
@@ -495,17 +515,15 @@ class AllCourtCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: Image.network(
-              lapangan.thumbnail.isNotEmpty
-                  ? lapangan.thumbnail
-                  : "https://via.placeholder.com/150",
+              imageUrl,
               width: 100,
               height: 100,
               fit: BoxFit.cover,
               errorBuilder: (ctx, _, __) => Container(
                 width: 100,
                 height: 100,
-                color: Colors.grey,
-                child: const Icon(Icons.broken_image),
+                color: Colors.grey[300],
+                child: const Icon(Icons.broken_image, color: Colors.grey),
               ),
             ),
           ),
@@ -542,9 +560,7 @@ class AllCourtCard extends StatelessWidget {
                       child: SizedBox(
                         height: 32,
                         child: ElevatedButton(
-                          onPressed: () {
-                            // TODO: Navigate to review page if available
-                          },
+                          onPressed: () {},
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF64B5F6),
                             padding: EdgeInsets.zero,
@@ -553,10 +569,7 @@ class AllCourtCard extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text(
-                            "Review",
-                            style: TextStyle(color: Colors.white, fontSize: 12),
-                          ),
+                          child: const Text("Review", style: TextStyle(color: Colors.white, fontSize: 12)),
                         ),
                       ),
                     ),
@@ -566,7 +579,8 @@ class AllCourtCard extends StatelessWidget {
                         height: 32,
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.push(
+                             // Integrasi dengan fitur teman Anda
+                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => BookingDetailPage(
@@ -586,15 +600,12 @@ class AllCourtCard extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text(
-                            "Book",
-                            style: TextStyle(color: Colors.white, fontSize: 12),
-                          ),
+                          child: const Text("Book", style: TextStyle(color: Colors.white, fontSize: 12)),
                         ),
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),
