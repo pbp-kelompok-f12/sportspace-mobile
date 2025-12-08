@@ -5,15 +5,16 @@ import 'package:sportspace_app/menu.dart';
 import 'package:sportspace_app/screens/register.dart';
 import 'package:sportspace_app/widgets/base_background.dart';
 import 'package:flutter/gestures.dart';
+import 'package:sportspace_app/screens/homepage.dart';
 
-class LoginPage  extends StatefulWidget {
-  const LoginPage ({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<LoginPage > createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late AnimationController _motifController;
   late Animation<Offset> _motifOffset;
   late Animation<double> _motifOpacity;
@@ -44,10 +45,14 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _motifOffset = Tween<Offset>(begin: const Offset(0, -0.2), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _motifController, curve: Curves.easeOut));
-    _motifOpacity = Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: _motifController, curve: Curves.easeIn));
+    _motifOffset = Tween<Offset>(
+      begin: const Offset(0, -0.2),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _motifController, curve: Curves.easeOut));
+    _motifOpacity = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _motifController, curve: Curves.easeIn));
     _motifController.forward();
 
     // Logo
@@ -55,10 +60,13 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _logoScale = Tween<double>(begin: 0.8, end: 1.0)
-        .animate(CurvedAnimation(parent: _logoController, curve: Curves.elasticOut));
-    _logoOpacity = Tween<double>(begin: 0, end: 1)
-        .animate(CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
+    _logoScale = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
+    );
+    _logoOpacity = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) _logoController.forward();
     });
@@ -68,10 +76,14 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _cardOffset = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _cardController, curve: Curves.easeOut));
-    _cardOpacity = Tween<double>(begin: 0, end: 1)
-        .animate(CurvedAnimation(parent: _cardController, curve: Curves.easeIn));
+    _cardOffset = Tween<Offset>(
+      begin: const Offset(0, 0.5),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _cardController, curve: Curves.easeOut));
+    _cardOpacity = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _cardController, curve: Curves.easeIn));
     Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) _cardController.forward();
     });
@@ -81,10 +93,13 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _welcomeOffset = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _welcomeController, curve: Curves.easeOut));
-    _welcomeOpacity = Tween<double>(begin: 0, end: 1)
-        .animate(CurvedAnimation(parent: _welcomeController, curve: Curves.easeIn));
+    _welcomeOffset =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _welcomeController, curve: Curves.easeOut),
+        );
+    _welcomeOpacity = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _welcomeController, curve: Curves.easeIn),
+    );
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) _welcomeController.forward();
     });
@@ -178,26 +193,26 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         SlideTransition(
-  position: _welcomeOffset,
-  child: FadeTransition(
-    opacity: _welcomeOpacity,
-    child: const Text(
-      "Welcome Back!",
-      style: TextStyle(
-        fontSize: 32,
-        fontWeight: FontWeight.w900,
-        color: Color(0xFFf97316),
-        shadows: [
-          Shadow(
-            offset: Offset(1, 1),
-            color: Color.fromARGB(255, 255, 173, 80),
-            blurRadius: 1.5,
-          ),
-        ],
-      ),
-    ),
-  ),
-),
+                          position: _welcomeOffset,
+                          child: FadeTransition(
+                            opacity: _welcomeOpacity,
+                            child: const Text(
+                              "Welcome Back!",
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFFf97316),
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(1, 1),
+                                    color: Color.fromARGB(255, 255, 173, 80),
+                                    blurRadius: 1.5,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
 
                         const SizedBox(height: 28),
 
@@ -222,7 +237,9 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
                             hintText: "Enter your username",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20),
-                              borderSide: BorderSide(color: Colors.grey.shade400),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade400,
+                              ),
                             ),
                           ),
                         ),
@@ -250,7 +267,9 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
                             hintText: "Enter your password",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20),
-                              borderSide: BorderSide(color: Colors.grey.shade400),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade400,
+                              ),
                             ),
                           ),
                         ),
@@ -258,15 +277,22 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
 
                         // Login button dengan animasi scale saat ditekan
                         MouseRegion(
-                          onEnter: (_) => !isLoading ? setState(() => buttonScale = 0.97) : null,
-                          onExit: (_) => !isLoading ? setState(() => buttonScale = 1.0) : null,
+                          onEnter: (_) => !isLoading
+                              ? setState(() => buttonScale = 0.97)
+                              : null,
+                          onExit: (_) => !isLoading
+                              ? setState(() => buttonScale = 1.0)
+                              : null,
                           child: GestureDetector(
-                            onTapDown: (_) =>
-                                !isLoading ? setState(() => buttonScale = 0.94) : null,
-                            onTapUp: (_) =>
-                                !isLoading ? setState(() => buttonScale = 1.0) : null,
-                            onTapCancel: () =>
-                                !isLoading ? setState(() => buttonScale = 1.0) : null,
+                            onTapDown: (_) => !isLoading
+                                ? setState(() => buttonScale = 0.94)
+                                : null,
+                            onTapUp: (_) => !isLoading
+                                ? setState(() => buttonScale = 1.0)
+                                : null,
+                            onTapCancel: () => !isLoading
+                                ? setState(() => buttonScale = 1.0)
+                                : null,
                             onTap: isLoading
                                 ? null
                                 : () async {
@@ -277,7 +303,10 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
 
                                     final response = await request.login(
                                       "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/accounts/login-flutter/",
-                                      {"username": username, "password": password},
+                                      {
+                                        "username": username,
+                                        "password": password,
+                                      },
                                     );
 
                                     setState(() => isLoading = false);
@@ -287,7 +316,8 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
                                         Navigator.pushReplacement(
                                           context,
                                           MaterialPageRoute(
-                                              builder: (_) => MyHomePage()),
+                                            builder: (_) => HomePage(),
+                                          ),
                                         );
                                       }
                                     } else {
@@ -315,7 +345,9 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
                               child: Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.symmetric(
-                                    vertical: 16, horizontal: 20),
+                                  vertical: 16,
+                                  horizontal: 20,
+                                ),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(50),
                                   gradient: const LinearGradient(
@@ -357,7 +389,7 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
                                                 fontWeight: FontWeight.w800,
                                                 letterSpacing: 1.2,
                                               ),
-                                            )
+                                            ),
                                           ],
                                         )
                                       : const Text(
@@ -398,14 +430,15 @@ class _LoginPageState  extends State<LoginPage > with TickerProviderStateMixin {
                                   ..onTap = () {
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (_) => const RegisterPage()),
+                                      MaterialPageRoute(
+                                        builder: (_) => const RegisterPage(),
+                                      ),
                                     );
                                   },
                               ),
                             ],
                           ),
                         ),
-
                       ],
                     ),
                   ),
