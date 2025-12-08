@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:sportspace_app/menu.dart';
 import 'package:sportspace_app/screens/register.dart';
 import 'package:sportspace_app/widgets/base_background.dart';
 import 'package:flutter/gestures.dart';

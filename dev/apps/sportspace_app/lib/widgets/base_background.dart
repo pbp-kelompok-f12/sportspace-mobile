@@ -34,7 +34,7 @@ class BaseBackground extends StatelessWidget {
           ),
         ),
 
-        // Konten halaman (login / register)
+        // Konten halaman 
         child,
       ],
     );
