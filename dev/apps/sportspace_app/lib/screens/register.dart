@@ -365,9 +365,30 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                                   ),
                                   child: Center(
                                     child: isLoading
-                                        ? const CircularProgressIndicator(
-                                            color: Color(0xFF0C2D57),
-                                          )
+                                        ? Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: const [
+                                            SizedBox(
+                                              height: 20,
+                                              width: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 3,
+                                                color: Color(0xFF0C2D57),
+                                              ),
+                                            ),
+                                            SizedBox(width: 12),
+                                            Text(
+                                              "Signing In...",
+                                              style: TextStyle(
+                                                color: Color(0xFF0C2D57),
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w800,
+                                                letterSpacing: 1.2,
+                                              ),
+                                            ),
+                                          ],
+                                        )
                                         : const Text(
                                             "Create Account",
                                             style: TextStyle(
