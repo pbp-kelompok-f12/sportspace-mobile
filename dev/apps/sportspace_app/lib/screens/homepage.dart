@@ -6,6 +6,7 @@ import 'my_bookings.dart';
 import 'package:sportspace_app/screens/venue_form.dart';
 import 'package:sportspace_app/screens/venue_list.dart';
 import 'package:sportspace_app/models/lapangan.dart';
+import 'package:sportspace_app/screens/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,6 +20,7 @@ class _HomePageState extends State<HomePage> {
   // Konstanta untuk tab index
   static const int _tabHome = 0;
   static const int _tabBookings = 1;
+  static const int _tabProfile = 4;
 
   // State untuk Search dan Filter
   final TextEditingController _searchController = TextEditingController();
@@ -35,7 +37,7 @@ class _HomePageState extends State<HomePage> {
 
   // --- PERBAIKAN 1: IP Address ---
   // Gunakan 10.0.2.2 untuk Android Emulator
-  final String baseUrl = "http://127.0.0.1:8000"; 
+  final String baseUrl = "http://127.0.0.1:8000";
 
   late Future<List<Lapangan>> _lapanganFuture;
 
@@ -111,7 +113,8 @@ class _HomePageState extends State<HomePage> {
             final nameMatches = court.nama.toLowerCase().contains(
               _searchKeyword.toLowerCase(),
             );
-            final locationMatches = _selectedLocation == null ||
+            final locationMatches =
+                _selectedLocation == null ||
                 court.alamat.toLowerCase().contains(
                   _selectedLocation!.toLowerCase(),
                 );
@@ -124,7 +127,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 _buildSearchSection(darkBlue),
                 const SizedBox(height: 20),
-                
+
                 // Recommended Section
                 if (recommendedCourts.isNotEmpty) ...[
                   const Padding(
@@ -211,11 +214,14 @@ class _HomePageState extends State<HomePage> {
     } else if (_selectedIndex == _tabBookings) {
       // ISI HALAMAN BOOKINGS
       bodyContent = const MyBookingsPage();
+    } else if (_selectedIndex == _tabProfile) {
+      // ISI HALAMAN PROFILE
+      bodyContent = ProfilePage();
+      // bodyContent = ProfilePage();
+      
     } else {
       // ISI HALAMAN LAIN (Placeholder)
-      bodyContent = const Center(
-        child: Text("Coming soon..."),
-      );
+      bodyContent = const Center(child: Text("Coming soon..."));
     }
 
     return Scaffold(
@@ -227,7 +233,9 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
             backgroundColor: Colors.white,
-            backgroundImage: const AssetImage('assets/images/logosportspace.png'),
+            backgroundImage: const AssetImage(
+              'assets/images/logosportspace.png',
+            ),
           ),
         ),
         title: const Text(
@@ -252,9 +260,9 @@ class _HomePageState extends State<HomePage> {
         child: const Icon(Icons.add, color: Colors.white),
         tooltip: 'Add Venue',
       ),
-      
+
       // Di sini kita panggil variabel bodyContent yang sudah di-set logic di atas
-      body: bodyContent, 
+      body: bodyContent,
 
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -362,7 +370,10 @@ class _HomePageState extends State<HomePage> {
                             ..._locations.map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
-                                child: Text(value, style: const TextStyle(fontSize: 14)),
+                                child: Text(
+                                  value,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
                               );
                             }),
                           ],
@@ -387,7 +398,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text("Search", style: TextStyle(color: Colors.white)),
+                      child: const Text(
+                        "Search",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                 ],
@@ -406,7 +420,7 @@ String getProxyUrl(String originalUrl) {
   if (originalUrl.isEmpty) {
     return "https://via.placeholder.com/150";
   }
-  
+
   String encodedUrl = Uri.encodeComponent(originalUrl);
 
   // Gunakan 10.0.2.2 untuk Android Emulator
@@ -446,7 +460,7 @@ class RecommendedCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Image.network(
-                imageUrl, 
+                imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (ctx, _, __) {
                   return Container(
@@ -569,7 +583,10 @@ class AllCourtCard extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text("Review", style: TextStyle(color: Colors.white, fontSize: 12)),
+                          child: const Text(
+                            "Review",
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
                         ),
                       ),
                     ),
@@ -579,8 +596,8 @@ class AllCourtCard extends StatelessWidget {
                         height: 32,
                         child: ElevatedButton(
                           onPressed: () {
-                             // Integrasi dengan fitur teman Anda
-                             Navigator.push(
+                            // Integrasi dengan fitur teman Anda
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => BookingDetailPage(
@@ -600,7 +617,10 @@ class AllCourtCard extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text("Book", style: TextStyle(color: Colors.white, fontSize: 12)),
+                          child: const Text(
+                            "Book",
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
                         ),
                       ),
                     ),
