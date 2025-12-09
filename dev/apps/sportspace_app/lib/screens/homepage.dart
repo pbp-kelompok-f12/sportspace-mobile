@@ -6,7 +6,7 @@ import 'my_bookings.dart';
 import 'package:sportspace_app/screens/venue_form.dart';
 import 'package:sportspace_app/screens/venue_list.dart';
 import 'package:sportspace_app/models/lapangan.dart';
-import 'package:sportspace_app/screens/profile_page.dart';
+import 'package:sportspace_app/screens/profile/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
