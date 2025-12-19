@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:sportspace_app/screens/login.dart';
+import 'package:sportspace_app/screens/auth/login.dart';
+import 'package:sportspace_app/screens/homepage.dart';
+
+// import 'package:sportspace_app/screens/profile/friendpage.dart';
 
 void main() {
   runApp(const MyApp());

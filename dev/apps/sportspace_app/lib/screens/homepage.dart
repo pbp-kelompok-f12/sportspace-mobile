@@ -7,7 +7,7 @@ import 'my_bookings.dart';
 import 'package:sportspace_app/screens/venue_form.dart';
 import 'package:sportspace_app/screens/venue_list.dart';
 import 'package:sportspace_app/models/lapangan.dart';
-import 'package:sportspace_app/screens/matchmaking_page.dart';
+import 'package:sportspace_app/screens/profile/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,9 +21,7 @@ class _HomePageState extends State<HomePage> {
   // Konstanta untuk tab index
   static const int _tabHome = 0;
   static const int _tabBookings = 1;
-  static const int _tabMatch = 2; // Index untuk tab 'Match'
-  static const int _tabReviews = 3; // Index untuk tab 'Reviews'
-  static const int _tabProfile = 4; // Index untuk tab 'Profile'
+  static const int _tabProfile = 4;
 
   // State untuk Search dan Filter
   final TextEditingController _searchController = TextEditingController();
@@ -40,7 +38,6 @@ class _HomePageState extends State<HomePage> {
 
   // --- PERBAIKAN 1: IP Address ---
   // Gunakan 10.0.2.2 untuk Android Emulator
-  // Ganti ke "http://10.0.2.2:8000" jika menggunakan Android Emulator
   final String baseUrl = "http://127.0.0.1:8000";
 
   late Future<List<Lapangan>> _lapanganFuture;
@@ -123,53 +120,54 @@ class _HomePageState extends State<HomePage> {
               recommendedCourts = allCourtsRaw.take(5).toList();
             }
 
-            // Logic Filter
-            final filteredCourts = allCourtsRaw.where((court) {
-              final nameMatches = court.nama.toLowerCase().contains(
-                    _searchKeyword.toLowerCase(),
-                  );
-              final locationMatches = _selectedLocation == null ||
-                  court.alamat.toLowerCase().contains(
-                        _selectedLocation!.toLowerCase(),
-                      );
-              return nameMatches && locationMatches;
-            }).toList();
+          // Logic Filter
+          final filteredCourts = allCourtsRaw.where((court) {
+            final nameMatches = court.nama.toLowerCase().contains(
+              _searchKeyword.toLowerCase(),
+            );
+            final locationMatches =
+                _selectedLocation == null ||
+                court.alamat.toLowerCase().contains(
+                  _selectedLocation!.toLowerCase(),
+                );
+            return nameMatches && locationMatches;
+          }).toList();
 
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSearchSection(darkBlue),
-                  const SizedBox(height: 20),
-                  
-                  // Recommended Section
-                  if (recommendedCourts.isNotEmpty) ...[
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        "Recommended Courts",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: darkBlue,
-                        ),
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSearchSection(darkBlue),
+                const SizedBox(height: 20),
+
+                // Recommended Section
+                if (recommendedCourts.isNotEmpty) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      "Recommended Courts",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0D2C3E),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 220,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.only(left: 16),
-                        itemCount: recommendedCourts.length,
-                        itemBuilder: (context, index) {
-                          return RecommendedCard(
-                            lapangan: recommendedCourts[index],
-                          );
-                        },
-                      ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 220,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.only(left: 16),
+                      itemCount: recommendedCourts.length,
+                      itemBuilder: (context, index) {
+                        return RecommendedCard(
+                          lapangan: recommendedCourts[index],
+                        );
+                      },
                     ),
-                  ],
+                  ),
+                ],
 
                   // All Courts Header
                   Padding(
@@ -201,49 +199,41 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
-                  if (filteredCourts.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        "No courts found matching your search.",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: filteredCourts.length,
-                      itemBuilder: (context, index) {
-                        return AllCourtCard(lapangan: filteredCourts[index]);
-                      },
+                if (filteredCourts.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      "No courts found matching your search.",
+                      style: TextStyle(color: Colors.grey),
                     ),
-                  const SizedBox(height: 80),
-                ],
-              ),
-            );
-          },
-        );
-        break;
-      case _tabBookings:
-        // ISI HALAMAN BOOKINGS
-        bodyContent = const MyBookingsPage();
-        break;
-      case _tabMatch:
-        // ISI HALAMAN MATCHMAKING
-        bodyContent = const MatchmakingPage();
-        break;
-      case _tabReviews:
-        // ISI HALAMAN REVIEWS
-        bodyContent = const Center(child: Text("Halaman Reviews Coming Soon..."));
-        break;
-      case _tabProfile:
-        // ISI HALAMAN PROFILE
-        bodyContent = const Center(child: Text("Halaman Profile Coming Soon..."));
-        break;
-      default:
-        bodyContent = const Center(child: Text("Halaman Tidak Ditemukan"));
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: filteredCourts.length,
+                    itemBuilder: (context, index) {
+                      return AllCourtCard(lapangan: filteredCourts[index]);
+                    },
+                  ),
+                const SizedBox(height: 80),
+              ],
+            ),
+          );
+        },
+      );
+    } else if (_selectedIndex == _tabBookings) {
+      // ISI HALAMAN BOOKINGS
+      bodyContent = const MyBookingsPage();
+    } else if (_selectedIndex == _tabProfile) {
+      // ISI HALAMAN PROFILE
+      bodyContent = ProfilePage();
+      // bodyContent = ProfilePage();
+      
+    } else {
+      // ISI HALAMAN LAIN (Placeholder)
+      bodyContent = const Center(child: Text("Coming soon..."));
     }
 
     return Scaffold(
@@ -255,7 +245,9 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.all(8.0),
           child: CircleAvatar(
             backgroundColor: Colors.white,
-            backgroundImage: AssetImage('assets/images/logosportspace.png'),
+            backgroundImage: const AssetImage(
+              'assets/images/logosportspace.png',
+            ),
           ),
         ),
         title: const Text(
@@ -280,9 +272,9 @@ class _HomePageState extends State<HomePage> {
         child: const Icon(Icons.add, color: Colors.white),
         tooltip: 'Add Venue',
       ),
-      
+
       // Di sini kita panggil variabel bodyContent yang sudah di-set logic di atas
-      body: bodyContent, 
+      body: bodyContent,
 
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -389,7 +381,10 @@ class _HomePageState extends State<HomePage> {
                             ..._locations.map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
-                                child: Text(value, style: const TextStyle(fontSize: 14)),
+                                child: Text(
+                                  value,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
                               );
                             }),
                           ],
@@ -414,7 +409,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text("Search", style: TextStyle(color: Colors.white)),
+                      child: const Text(
+                        "Search",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                 ],
@@ -433,7 +431,7 @@ String getProxyUrl(String originalUrl) {
   if (originalUrl.isEmpty) {
     return "https://via.placeholder.com/150";
   }
-  
+
   String encodedUrl = Uri.encodeComponent(originalUrl);
 
   // Ganti ke "http://10.0.2.2:8000..." jika menggunakan Android Emulator
@@ -450,75 +448,70 @@ class RecommendedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final String imageUrl = getProxyUrl(lapangan.thumbnail);
 
-    return InkWell(
-      onTap: () {
-        // Navigasi ke detail lapangan jika diperlukan
-      },
-      child: Container(
-        width: 180,
-        margin: const EdgeInsets.only(right: 16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-                bottom: Radius.circular(20),
+    return Container(
+      width: 180,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(20),
+              bottom: Radius.circular(20),
+            ),
+            child: Container(
+              height: 120,
+              width: double.infinity,
+              margin: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Container(
-                height: 120,
-                width: double.infinity,
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (ctx, _, __) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.broken_image, color: Colors.grey),
-                    );
-                  },
-                ),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (ctx, _, __) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                  );
+                },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    lapangan.nama,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFFFF9800),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  lapangan.nama,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFFFF9800),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    lapangan.alamat.split(',')[0],
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  lapangan.alamat.split(',')[0],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -601,7 +594,10 @@ class AllCourtCard extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text("Review", style: TextStyle(color: Colors.white, fontSize: 12)),
+                          child: const Text(
+                            "Review",
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
                         ),
                       ),
                     ),
@@ -611,8 +607,8 @@ class AllCourtCard extends StatelessWidget {
                         height: 32,
                         child: ElevatedButton(
                           onPressed: () {
-                              // Navigasi ke BookingDetailPage
-                              Navigator.push(
+                            // Integrasi dengan fitur teman Anda
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => BookingDetailPage(
@@ -632,7 +628,10 @@ class AllCourtCard extends StatelessWidget {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text("Book", style: TextStyle(color: Colors.white, fontSize: 12)),
+                          child: const Text(
+                            "Book",
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
                         ),
                       ),
                     ),

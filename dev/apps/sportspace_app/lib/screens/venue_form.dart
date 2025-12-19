@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
-// Ganti 'sportspace_app' sesuai nama folder project Anda jika berbeda
 import 'package:sportspace_app/screens/homepage.dart'; 
-
 
 class VenueFormPage extends StatefulWidget {
   const VenueFormPage({super.key});
@@ -18,16 +16,24 @@ class _VenueFormPageState extends State<VenueFormPage> {
 
   // Variabel Form
   String _nama = "";
-  String _alamat = "";
+  String _detailJalan = ""; // Mengganti _alamat menjadi detail jalan
+  String? _selectedCity;    // Tambahan: Untuk menyimpan wilayah pilihan
   String _thumbnail = "";
-  String _notes = ""; // Tambahan sesuai model Django
+  String _notes = "";
   bool _isFeatured = false;
+
+  // Daftar Lokasi (Harus SAMA PERSIS dengan yang ada di Homepage agar filter bekerja)
+  final List<String> _locations = [
+    'Jakarta Selatan',
+    'Jakarta Pusat',
+    'Jakarta Barat',
+    'Jakarta Timur',
+    'Jakarta Utara',
+  ];
 
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
-    
-    // Warna tema
     final Color darkBlue = const Color(0xFF0D2C3E);
 
     return Scaffold(
@@ -50,7 +56,7 @@ class _VenueFormPageState extends State<VenueFormPage> {
                 // 1. Nama Lapangan
                 TextFormField(
                   decoration: InputDecoration(
-                    hintText: "Nama Lapangan",
+                    hintText: "Contoh: Padel Senayan",
                     labelText: "Nama Lapangan",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
@@ -70,24 +76,54 @@ class _VenueFormPageState extends State<VenueFormPage> {
                 ),
                 const SizedBox(height: 16.0),
 
-                // 2. Alamat
-                TextFormField(
+                // 2.A. Dropdown Wilayah (PENTING untuk Filter Homepage)
+                DropdownButtonFormField<String>(
                   decoration: InputDecoration(
-                    hintText: "Alamat Lengkap",
-                    labelText: "Alamat",
+                    labelText: "Wilayah / Kota",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
                     ),
                   ),
-                  maxLines: 3,
-                  onChanged: (String? value) {
+                  value: _selectedCity,
+                  hint: const Text("Pilih Wilayah"),
+                  items: _locations.map((String location) {
+                    return DropdownMenuItem<String>(
+                      value: location,
+                      child: Text(location),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
                     setState(() {
-                      _alamat = value!;
+                      _selectedCity = newValue;
                     });
                   },
                   validator: (String? value) {
                     if (value == null || value.isEmpty) {
-                      return "Alamat tidak boleh kosong!";
+                      return "Pilih wilayah terlebih dahulu!";
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16.0),
+
+                // 2.B. Detail Alamat (Jalan, No, RT/RW)
+                TextFormField(
+                  decoration: InputDecoration(
+                    hintText: "Jl. Jendral Sudirman No. 1",
+                    labelText: "Detail Alamat Jalan",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                  ),
+                  maxLines: 2,
+                  onChanged: (String? value) {
+                    setState(() {
+                      _detailJalan = value!;
+                    });
+                  },
+                  validator: (String? value) {
+                    if (value == null || value.isEmpty) {
+                      return "Detail alamat tidak boleh kosong!";
                     }
                     return null;
                   },
@@ -97,7 +133,7 @@ class _VenueFormPageState extends State<VenueFormPage> {
                 // 3. Thumbnail URL
                 TextFormField(
                   decoration: InputDecoration(
-                    hintText: "URL Gambar (Thumbnail)",
+                    hintText: "https://example.com/image.jpg",
                     labelText: "Thumbnail URL",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
@@ -117,11 +153,11 @@ class _VenueFormPageState extends State<VenueFormPage> {
                 ),
                 const SizedBox(height: 16.0),
 
-                // 4. Notes (Opsional, tapi ada di model)
+                // 4. Notes
                 TextFormField(
                   decoration: InputDecoration(
-                    hintText: "Catatan Tambahan (Opsional)",
-                    labelText: "Notes",
+                    hintText: "Fasilitas: Parkir luas, kantin, dll.",
+                    labelText: "Notes (Opsional)",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
                     ),
@@ -146,7 +182,7 @@ class _VenueFormPageState extends State<VenueFormPage> {
                         });
                       },
                     ),
-                    const Text("Jadikan Lapangan Unggulan (Featured)"),
+                    const Text("Jadikan Lapangan Unggulan"),
                   ],
                 ),
                 const SizedBox(height: 24.0),
@@ -165,25 +201,26 @@ class _VenueFormPageState extends State<VenueFormPage> {
                     ),
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        // GENERATE PLACE_ID MANUAL
-                        // Karena di Django wajib ada place_id, kita buat unik menggunakan timestamp
-                        String generatedPlaceId = "manual-${DateTime.now().millisecondsSinceEpoch}";
+                        // LOGIKA PENGGABUNGAN ALAMAT
+                        // Format: "Jl. Bla Bla, Jakarta Selatan"
+                        // Ini memastikan filter "contains('Jakarta Selatan')" di homepage bernilai TRUE.
+                        String finalAddress = "$_detailJalan, $_selectedCity";
+
+                        // GENERATE ID (Randomize sesuai permintaan)
+                        String generatedPlaceId = "user-${DateTime.now().millisecondsSinceEpoch}";
 
                         // Kirim ke Backend
-                        // PENTING: Ganti URL sesuai environment (Localhost/Emulator)
-                        // Android Emulator: http://10.0.2.2:8000/
-                        // Browser/iOS Simulator: http://127.0.0.1:8000/
+                        // NOTE: Sesuaikan URL (10.0.2.2 untuk Emulator Android, 127.0.0.1 untuk web/iOS)
                         final response = await request.postJson(
                           "http://127.0.0.1:8000/api/lapangan/create-flutter/", 
                           jsonEncode({
-                            "place_id": generatedPlaceId, // Wajib dikirim
+                            "place_id": generatedPlaceId, 
                             "nama": _nama,
-                            "alamat": _alamat,
+                            "alamat": finalAddress, // Alamat yang sudah digabung
                             "thumbnail_url": _thumbnail,
                             "notes": _notes,
                             "is_featured": _isFeatured,
-                            // Kirim default value untuk rating agar tidak error/null di database
-                            "rating": 0.0, 
+                            "rating": 0.0, // Default rating
                             "total_review": 0,
                           }),
                         );
@@ -194,6 +231,7 @@ class _VenueFormPageState extends State<VenueFormPage> {
                                 .showSnackBar(const SnackBar(
                               content: Text("Lapangan berhasil disimpan!"),
                             ));
+                            // Kembali ke homepage dan refresh data
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(builder: (context) => const HomePage()),
