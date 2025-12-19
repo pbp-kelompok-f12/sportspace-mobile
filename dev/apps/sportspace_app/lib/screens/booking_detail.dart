@@ -433,4 +433,3 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
   }
 }
 
-

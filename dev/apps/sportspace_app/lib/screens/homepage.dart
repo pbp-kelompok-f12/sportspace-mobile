@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-
 import 'booking_detail.dart';
 import 'my_bookings.dart';
 import 'package:sportspace_app/screens/venue_form.dart';
@@ -28,7 +27,7 @@ class _HomePageState extends State<HomePage> {
   String _searchKeyword = "";
   String? _selectedLocation;
 
-  final List<String> _locations = const [
+  final List<String> _locations = [
     'Jakarta Selatan',
     'Jakarta Pusat',
     'Jakarta Barat',
@@ -45,35 +44,24 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Inisialisasi Future di didChangeDependencies
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Panggil fetchLapangans di sini setelah context tersedia
     final request = context.read<CookieRequest>();
     _lapanganFuture = fetchLapangans(request);
   }
 
   Future<List<Lapangan>> fetchLapangans(CookieRequest request) async {
-    try {
-      final response = await request.get('$baseUrl/home/api/lapangan/');
-      List<Lapangan> listLapangan = [];
-      if (response is List) {
-        for (var d in response) {
-          if (d != null && d is Map<String, dynamic>) {
-            listLapangan.add(Lapangan.fromJson(d));
-          }
-        }
+    final response = await request.get('$baseUrl/home/api/lapangan/');
+    List<Lapangan> listLapangan = [];
+    for (var d in response) {
+      if (d != null) {
+        listLapangan.add(Lapangan.fromJson(d));
       }
-      return listLapangan;
-    } catch (e) {
-      // Menangani error koneksi
-      debugPrint("Error fetching lapangans: $e");
-      // Melemparkan error agar FutureBuilder dapat menampilkannya
-      throw Exception("Gagal memuat data lapangan: Pastikan server berjalan dan IP benar ($baseUrl).");
     }
+    return listLapangan;
   }
 
   void _onItemTapped(int index) {
@@ -90,35 +78,35 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    const Color darkBlue = Color(0xFF0D2C3E);
-    const Color bottomNavBlue = Color(0xFF90CAF9);
+    final Color darkBlue = const Color(0xFF0D2C3E);
+    final Color bottomNavBlue = const Color(0xFF90CAF9);
 
     // --- PERBAIKAN 2: Logika Navigasi ---
+    // Kita tentukan isi "body" berdasarkan _selectedIndex SEBELUM masuk ke Scaffold
     Widget bodyContent;
 
-    switch (_selectedIndex) {
-      case _tabHome:
-        // ISI HALAMAN HOME
-        bodyContent = FutureBuilder<List<Lapangan>>(
-          future: _lapanganFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text("Error: ${snapshot.error}"));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text("Tidak ada data lapangan"));
-            }
+    if (_selectedIndex == _tabHome) {
+      // ISI HALAMAN HOME
+      bodyContent = FutureBuilder<List<Lapangan>>(
+        future: _lapanganFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text("Tidak ada data lapangan"));
+          }
 
-            final allCourtsRaw = snapshot.data!;
+          final allCourtsRaw = snapshot.data!;
 
-            // Logic Recommended
-            List<Lapangan> recommendedCourts = allCourtsRaw
-                .where((l) => l.isFeatured)
-                .toList();
-            if (recommendedCourts.isEmpty && allCourtsRaw.isNotEmpty) {
-              recommendedCourts = allCourtsRaw.take(5).toList();
-            }
+          // Logic Recommended
+          List<Lapangan> recommendedCourts = allCourtsRaw
+              .where((l) => l.isFeatured)
+              .toList();
+          if (recommendedCourts.isEmpty && allCourtsRaw.isNotEmpty) {
+            recommendedCourts = allCourtsRaw.take(5).toList();
+          }
 
           // Logic Filter
           final filteredCourts = allCourtsRaw.where((court) {
@@ -169,35 +157,35 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
 
-                  // All Courts Header
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "All Courts",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: darkBlue,
-                          ),
+                // All Courts Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "All Courts",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0D2C3E),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const VenueListPage(isMyVenue: false),
-                              ),
-                            );
-                          },
-                          child: const Text("See All"),
-                        ),
-                      ],
-                    ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const VenueListPage(isMyVenue: false),
+                            ),
+                          );
+                        },
+                        child: const Text("See All"),
+                      ),
+                    ],
                   ),
+                ),
 
                 if (filteredCourts.isEmpty)
                   const Padding(
@@ -241,8 +229,8 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: darkBlue,
         elevation: 0,
-        leading: const Padding(
-          padding: EdgeInsets.all(8.0),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
             backgroundColor: Colors.white,
             backgroundImage: const AssetImage(
@@ -277,9 +265,9 @@ class _HomePageState extends State<HomePage> {
       body: bodyContent,
 
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: bottomNavBlue,
-          border: Border(
+          border: const Border(
             top: BorderSide(color: Colors.black12, width: 0.5),
           ),
         ),
@@ -296,11 +284,11 @@ class _HomePageState extends State<HomePage> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(
               icon: Icon(Icons.assignment),
-              label: 'Bookings',
+              label: 'Bookings', // Tab baru dari teman Anda
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.sports_tennis),
-              label: 'Match', // Tab Matchmaking
+              label: 'Match',
             ),
             BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Reviews'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
@@ -312,6 +300,7 @@ class _HomePageState extends State<HomePage> {
 
   // WIDGET SEARCH SECTION
   Widget _buildSearchSection(Color darkBlue) {
+    // ... (Kode Search Section sama seperti sebelumnya, tidak perlu diubah)
     return Stack(
       children: [
         Container(height: 100, width: double.infinity, color: darkBlue),
@@ -426,7 +415,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 // --- PERBAIKAN 3: PROXY URL IP ---
-// Pastikan ini juga menggunakan 10.0.2.2 jika menggunakan Android Emulator
+// Pastikan ini juga menggunakan 10.0.2.2
 String getProxyUrl(String originalUrl) {
   if (originalUrl.isEmpty) {
     return "https://via.placeholder.com/150";
@@ -434,7 +423,7 @@ String getProxyUrl(String originalUrl) {
 
   String encodedUrl = Uri.encodeComponent(originalUrl);
 
-  // Ganti ke "http://10.0.2.2:8000..." jika menggunakan Android Emulator
+  // Gunakan 10.0.2.2 untuk Android Emulator
   return "http://127.0.0.1:8000/home/proxy-image/?url=$encodedUrl";
 }
 
