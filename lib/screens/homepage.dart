@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+import '../review/screens/venue_reviews_page.dart';
+import '../review/screens/my_reviews_page.dart';
 import 'booking_detail.dart';
 import 'my_bookings.dart';
 
@@ -48,6 +50,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   static const int _tabHome = 0;
   static const int _tabBookings = 1;
+  static const int _tabMyReviews = 3;
   
   // State untuk Search dan Filter
   final TextEditingController _searchController = TextEditingController();
@@ -223,7 +226,10 @@ class _HomePageState extends State<HomePage> {
       );
     } else if (_selectedIndex == _tabBookings) {
       bodyContent = const MyBookingsPage();
-    } else {
+    } else if (_selectedIndex == _tabMyReviews) {
+      bodyContent = const MyReviewsPage();
+    }
+    else {
       bodyContent = const Center(
         child: Text("Coming soon..."),
       );
@@ -273,7 +279,7 @@ class _HomePageState extends State<HomePage> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Bookings'),
             BottomNavigationBarItem(icon: Icon(Icons.sports_tennis), label: 'Match'),
-            BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Reviews'),
+            BottomNavigationBarItem(icon: Icon(Icons.star), label: 'My Reviews'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],
         ),
@@ -544,6 +550,15 @@ class AllCourtCard extends StatelessWidget {
                         child: ElevatedButton(
                           onPressed: () {
                             // TODO: Navigate to review page if available
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VenueReviewsPage(
+                                  venueId: lapangan.pk,
+                                  venueName: lapangan.nama,
+                                ),
+                              ),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF64B5F6),
