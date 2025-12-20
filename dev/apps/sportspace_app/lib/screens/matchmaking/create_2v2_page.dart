@@ -10,35 +10,134 @@ class Create2v2Page extends StatefulWidget {
 }
 
 class _Create2v2PageState extends State<Create2v2Page> {
-  final controller = TextEditingController();
+  final String baseUrl = "http://10.0.2.2:8000";
+  int? selectedBookingId;
+  final TextEditingController teammateController = TextEditingController();
+
+  Future<List<Map<String, dynamic>>> fetchActiveBookings(CookieRequest request) async {
+    final response = await request.get('$baseUrl/booking/api/my-bookings-json/?filter=active');
+    List<dynamic> results = response['results'] ?? [];
+    return results.cast<Map<String, dynamic>>();
+  }
+
+  void _create2v2Match(CookieRequest request) async {
+    if (selectedBookingId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Pilih booking lapangan terlebih dahulu")),
+      );
+      return;
+    }
+
+    final res = await request.post(
+      '$baseUrl/matchmaking/create-2v2/',
+      {
+        "booking_id": selectedBookingId.toString(),
+        "teammate": teammateController.text,
+      },
+    );
+
+    if (res != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("2v2 match berhasil dibuat!")),
+      );
+      Navigator.pop(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final request = context.read<CookieRequest>();
+    final request = context.watch<CookieRequest>();
+    const Color darkBlue = Color(0xFF0D2C3E);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Buat Match 2v2")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(labelText: "Nama Teman"),
+      appBar: AppBar(
+        title: const Text("Buat Match 2v2"),
+        backgroundColor: darkBlue,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: fetchActiveBookings(request),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+
+          final bookings = snapshot.data ?? [];
+          if (bookings.isEmpty) {
+            return const Center(
+              child: Text("Anda belum memiliki booking aktif untuk membuat match."),
+            );
+          }
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                const Text(
+                  "Pilih Booking Lapangan",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: bookings.length,
+                    itemBuilder: (context, index) {
+                      final booking = bookings[index];
+                      final isSelected = booking['id'] == selectedBookingId;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isSelected ? darkBlue : Colors.blueGrey[50],
+                            foregroundColor: isSelected ? Colors.white : Colors.black87,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              selectedBookingId = booking['id'];
+                            });
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                booking['venue']['name'] ?? "",
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              Text("${booking['booking_date']} • ${booking['start_time']} - ${booking['end_time']}"),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: teammateController,
+                  decoration: const InputDecoration(
+                    labelText: "Nama Teman (opsional)",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: darkBlue,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
+                  ),
+                  onPressed: () => _create2v2Match(request),
+                  child: const Text("Create 2v2"),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              child: const Text("Create 2v2"),
-              onPressed: () async {
-                await request.post(
-                  'http://10.0.2.2:8000/matchmaking/create-2v2/',
-                  {"teammate": controller.text},
-                );
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

@@ -1,43 +1,56 @@
 class MatchEntry {
   final int id;
-  final String modeDisplay;
+  final String mode; // "1v1" atau "2v2"
   final String createdByUsername;
   final int playerCount;
   final int maxPlayers;
-  final bool isFull;
-  final bool isUserRegistered;
-  final bool isUserCreator;
-  final bool canUserJoin;
   final List<String> playerUsernames;
   final String? tempTeammate;
+  final bool canUserJoin;
+  final bool isFull;
+
+  // Properti tambahan untuk list page dan join
+  final bool isUserCreator;
+  final bool isUserRegistered;
+  final String? venueName;
+  final String? startTime;
+  final String? endTime;
 
   MatchEntry({
     required this.id,
-    required this.modeDisplay,
+    required this.mode,
     required this.createdByUsername,
     required this.playerCount,
     required this.maxPlayers,
-    required this.isFull,
-    required this.isUserRegistered,
-    required this.isUserCreator,
-    required this.canUserJoin,
     required this.playerUsernames,
     this.tempTeammate,
+    required this.canUserJoin,
+    required this.isFull,
+    required this.isUserCreator,
+    required this.isUserRegistered,
+    this.venueName,
+    this.startTime,
+    this.endTime,
   });
+
+  String get modeDisplay => mode.toUpperCase();
 
   factory MatchEntry.fromJson(Map<String, dynamic> json) {
     return MatchEntry(
       id: json['id'],
-      modeDisplay: json['mode_display'],
-      createdByUsername: json['created_by_username'],
-      playerCount: json['player_count'],
-      maxPlayers: json['max_players'],
-      isFull: json['is_full'],
-      isUserRegistered: json['is_user_registered'],
-      isUserCreator: json['is_user_creator'],
-      canUserJoin: json['can_user_join'],
-      playerUsernames: List<String>.from(json['player_usernames']),
+      mode: json['mode'] ?? '',
+      createdByUsername: json['created_by_username'] ?? 'Unknown',
+      playerCount: json['player_count'] ?? 0,
+      maxPlayers: json['max_players'] ?? (json['mode'] == '1v1' ? 2 : 4),
+      playerUsernames: List<String>.from(json['players'] ?? []),
       tempTeammate: json['temp_teammate'],
+      canUserJoin: json['can_user_join'] ?? false,
+      isFull: json['is_full'] ?? false,
+      isUserCreator: json['is_user_creator'] ?? false,
+      isUserRegistered: json['is_user_registered'] ?? false,
+      venueName: json['venue_name'],
+      startTime: json['start_time'],
+      endTime: json['end_time'],
     );
   }
 }

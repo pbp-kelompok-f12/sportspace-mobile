@@ -13,15 +13,15 @@ class MatchDetailPage extends StatefulWidget {
 
 class _MatchDetailPageState extends State<MatchDetailPage> {
   final String baseUrl = "http://10.0.2.2:8000";
-  late Future<MatchEntry> future;
+  late Future<MatchEntry> futureMatch;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    future = fetch();
+    futureMatch = fetchMatch();
   }
 
-  Future<MatchEntry> fetch() async {
+  Future<MatchEntry> fetchMatch() async {
     final request = context.read<CookieRequest>();
     final res = await request.get('$baseUrl/matchmaking/json/${widget.matchId}/');
     return MatchEntry.fromJson(res);
@@ -33,38 +33,78 @@ class _MatchDetailPageState extends State<MatchDetailPage> {
       '$baseUrl/matchmaking/join/${widget.matchId}/',
       {},
     );
-    setState(() => future = fetch());
+    setState(() => futureMatch = fetchMatch());
   }
 
   @override
   Widget build(BuildContext context) {
+    const Color darkBlue = Color(0xFF0D2C3E);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Detail Match")),
-      body: FutureBuilder(
-        future: future,
+      appBar: AppBar(
+        title: const Text("Detail Match"),
+        backgroundColor: darkBlue,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: FutureBuilder<MatchEntry>(
+        future: futureMatch,
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: Text("Data match tidak tersedia"));
+          }
+
           final m = snapshot.data!;
+
           return Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(m.modeDisplay, style: const TextStyle(fontSize: 22)),
-                Text("Creator: ${m.createdByUsername}"),
+                Text(
+                  m.modeDisplay,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text("Lapangan: ${m.createdByUsername}"),
+                const SizedBox(height: 4),
                 Text("Pemain: ${m.playerCount}/${m.maxPlayers}"),
-                const SizedBox(height: 10),
-                const Text("Daftar Pemain:"),
-                ...m.playerUsernames.map((e) => Text("- $e")),
+                const SizedBox(height: 12),
+                const Text(
+                  "Daftar Pemain:",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                ...m.playerUsernames.map((username) => Text("- $username")),
                 if (m.tempTeammate != null)
                   Text("- ${m.tempTeammate} (Teman)"),
                 const Spacer(),
-                if (m.canUserJoin)
-                  ElevatedButton(
-                    onPressed: joinMatch,
-                    child: const Text("Join Match"),
+                if (m.canUserJoin && !m.isFull)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: joinMatch,
+                      child: const Text("Join Match"),
+                    ),
+                  ),
+                if (!m.canUserJoin || m.isFull)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey,
+                      ),
+                      child: const Text("Tidak Bisa Join"),
+                    ),
                   ),
               ],
             ),
