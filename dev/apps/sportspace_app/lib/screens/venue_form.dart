@@ -209,10 +209,9 @@ class _VenueFormPageState extends State<VenueFormPage> {
                         // GENERATE ID (Randomize sesuai permintaan)
                         String generatedPlaceId = "user-${DateTime.now().millisecondsSinceEpoch}";
 
-                        // Kirim ke Backend
-                        // NOTE: Sesuaikan URL (10.0.2.2 untuk Emulator Android, 127.0.0.1 untuk web/iOS)
+                        // Kirim ke Backend (endpoint deployment)
                         final response = await request.postJson(
-                          "http://127.0.0.1:8000/api/lapangan/create-flutter/", 
+                          "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/api/lapangan/create-flutter/", 
                           jsonEncode({
                             "place_id": generatedPlaceId, 
                             "nama": _nama,

@@ -37,9 +37,8 @@ class _HomePageState extends State<HomePage> {
     'Jakarta Utara',
   ];
 
-  // --- PERBAIKAN 1: IP Address ---
-  // Gunakan 10.0.2.2 untuk Android Emulator
-  final String baseUrl = "http://127.0.0.1:8000";
+  // Base URL deployment SportSpace (prod)
+  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
 
   late Future<List<Lapangan>> _lapanganFuture;
 
@@ -411,7 +410,7 @@ String getProxyUrl(String originalUrl) {
     return "https://via.placeholder.com/150";
   }
   String encodedUrl = Uri.encodeComponent(originalUrl);
-  return "http://127.0.0.1:8000/home/proxy-image/?url=$encodedUrl";
+  return "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/home/proxy-image/?url=$encodedUrl";
 }
 
 // --- WIDGET CARD: RECOMMENDED ---

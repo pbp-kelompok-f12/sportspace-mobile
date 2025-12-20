@@ -19,7 +19,7 @@ class _VenueListPageState extends State<VenueListPage> {
   Future<List<Lapangan>> fetchLapangans(CookieRequest request) async {
     // URL Endpoint Django
     
-    String url = 'http://127.0.0.1:8000/home/api/lapangan/';
+    String url = 'https://sean-marcello-sportspace.pbp.cs.ui.ac.id/home/api/lapangan/';
 
     // Jika nanti Anda punya endpoint khusus "Lapangan Saya", bisa pakai logika ini:
     // if (widget.isMyVenue) {

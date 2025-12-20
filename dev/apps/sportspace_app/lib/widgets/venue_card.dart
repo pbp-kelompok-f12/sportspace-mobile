@@ -23,7 +23,7 @@ class VenueCard extends StatelessWidget {
       // Encode URL gambar asli agar karakter spesial tidak merusak link
       String encodedUrl = Uri.encodeComponent(venue.thumbnail);
       // Gunakan 10.0.2.2 untuk Android Emulator mengakses localhost Django
-      imageUrl = "http://127.0.0.1:8000/home/proxy-image/?url=$encodedUrl";
+      imageUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/home/proxy-image/?url=$encodedUrl";
       
       // Catatan: Jika url proxy di urls.py Anda tidak ada prefix 'home/', 
       // hapus '/home' di link di atas. Sesuaikan dengan urls.py Django Anda.

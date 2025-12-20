@@ -11,7 +11,7 @@ class MyBookingsPage extends StatefulWidget {
 }
 
 class _MyBookingsPageState extends State<MyBookingsPage> {
-  final String baseUrl = "http://localhost:8000";
+  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
   late Future<List<dynamic>> _bookingsFuture;
   String _filter = "all";
 
