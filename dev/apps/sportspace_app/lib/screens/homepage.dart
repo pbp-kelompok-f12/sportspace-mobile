@@ -409,8 +409,8 @@ String getProxyUrl(String originalUrl) {
   if (originalUrl.isEmpty) {
     return "https://via.placeholder.com/150";
   }
-  String encodedUrl = Uri.encodeComponent(originalUrl);
-  return "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/home/proxy-image/?url=$encodedUrl";
+  // Use direct URL to avoid proxy/CORS issues on mobile
+  return originalUrl;
 }
 
 // --- WIDGET CARD: RECOMMENDED ---
