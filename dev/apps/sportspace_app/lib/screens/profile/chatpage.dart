@@ -1,10 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
-import 'package:intl/intl.dart'; // PENTING: Pastikan intl ada di pubspec.yaml
-
-// Sesuaikan import ini
 import 'package:sportspace_app/models/friend_entry.dart';
 
 // ==========================================
@@ -236,7 +232,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
             child: Row(
               children: [
-                Icon(Icons.add_circle_outline_rounded, color: textGrey, size: 28),
+                // Icon(Icons.add_circle_outline_rounded, color: textGrey, size: 28),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(
