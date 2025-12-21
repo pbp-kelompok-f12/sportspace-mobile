@@ -361,38 +361,112 @@ class DashboardAdminPage extends StatelessWidget {
     );
   }
 
-  // --- LOGIC LOGOUT ---
   Future<void> _handleLogout(BuildContext context, CookieRequest request) async {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: Text("Logout", style: TextStyle(color: primaryNavy, fontWeight: FontWeight.bold)),
-        content: const Text("Keluar dari sistem admin?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.logout_rounded,
+              size: 48,
+              color: Colors.red.shade600,
+            ),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final response = await request.logout(
-                "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/accounts/logout-flutter/"
-              );
-              if (context.mounted && response['status']) {
-                 Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                    (route) => false,
-                  );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text("Keluar", style: TextStyle(color: Colors.white)),
+          const SizedBox(height: 24),
+
+          // 2. Judul
+          Text(
+            "Konfirmasi Keluar",
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: const Color(0xFF0C2D57), // primaryNavy
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+
+          // 3. Deskripsi
+          Text(
+            "Apakah Anda yakin ingin mengakhiri sesi admin dan keluar dari sistem?",
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+
+          // 4. Action Buttons
+          Row(
+            children: [
+              // Tombol Batal
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: Colors.grey.shade300),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    "Batal",
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Tombol Keluar (Warna Merah)
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    final response = await request.logout(
+                        "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/accounts/logout-flutter/"
+                    );
+                    if (context.mounted && response['status']) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginPage()),
+                        (route) => false,
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    "Ya, Keluar",
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
-    );
-  }
-}
+    ),
+  );
+}}

@@ -24,7 +24,7 @@ class _ProfilePageState extends State<ProfilePage>
 
   // === PALET WARNA MODERN ===
   final Color primaryNavy = const Color(0xFF0F172A); // Slate 900
-  final Color primaryBlue = const Color(0xFF3B82F6); // Blue 500
+  final Color primaryBlue = const Color.fromARGB(255, 0, 95, 203); // Blue 500
   final Color accentOrange = const Color(0xFFF97316); // Orange 500
   final Color bgLight = const Color(0xFFF1F5F9); // Slate 100
   final Color textDark = const Color(0xFF1E293B); // Slate 800
