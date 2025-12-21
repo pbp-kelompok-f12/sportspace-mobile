@@ -232,7 +232,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
             child: Row(
               children: [
-                Icon(Icons.add_circle_outline_rounded, color: textGrey, size: 28),
+                // Icon(Icons.add_circle_outline_rounded, color: textGrey, size: 28),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(

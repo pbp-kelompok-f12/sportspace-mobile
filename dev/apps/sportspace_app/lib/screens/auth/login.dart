@@ -5,8 +5,9 @@ import 'package:sportspace_app/screens/auth/register.dart';
 import 'package:sportspace_app/widgets/base_background.dart';
 import 'package:flutter/gestures.dart';
 import 'package:sportspace_app/screens/homepage.dart';
-import 'package:sportspace_app/widgets/error_dialog.dart';
-
+// import 'package:sportspace_app/widgets/error_dialog.dart'; // Hapus ini karena tidak dipakai lagi
+import 'package:sportspace_app/screens/admin/dashboard_admin_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -22,7 +23,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late Animation<Offset> _headerOffset;
   late Animation<double> _logoScale;
 
-
   // Animasi Card
   late Animation<double> _cardScale;
   late Animation<double> _cardOpacity;
@@ -33,6 +33,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  // --- STATE UNTUK ERROR TEXT ---
+  String? _usernameError;
+  String? _passwordError;
 
   bool isLoading = false;
   bool _isPasswordVisible = false;
@@ -54,11 +58,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     // 1. Header turun dari atas
     _headerOffset =
         Tween<Offset>(begin: const Offset(0, -0.5), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _pageController,
-            curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
-          ),
-        );
+      CurvedAnimation(
+        parent: _pageController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
+      ),
+    );
 
     // 2. Logo Pop Up
     _logoScale = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -85,11 +89,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     // 4. Item dalam card muncul bertahap (slide up)
     _itemSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero)
         .animate(
-          CurvedAnimation(
-            parent: _pageController,
-            curve: const Interval(0.5, 1.0, curve: Curves.easeOutQuad),
-          ),
-        );
+      CurvedAnimation(
+        parent: _pageController,
+        curve: const Interval(0.5, 1.0, curve: Curves.easeOutQuad),
+      ),
+    );
     _itemFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _pageController,
@@ -125,252 +129,264 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: BaseBackground(
-        child: SingleChildScrollView(
-          // Agar aman di layar kecil
-          child: SizedBox(
-            height: MediaQuery.of(context).size.height,
-            child: Column(
-              children: [
-                // --- BAGIAN ATAS: MOTIF & LOGO ---
-                SlideTransition(
-                  position: _headerOffset,
-                  child: Container(
-                    width: double.infinity,
-                    height: 225, // Sedikit lebih tinggi untuk proporsi
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(36), // Lengkungan bawah
-                      ),
-                      image: DecorationImage(
-                        image: AssetImage("assets/images/orangemotif.png"),
-                        fit: BoxFit.cover,
-                      ),
-                      gradient: LinearGradient(
-                        colors: [
-                          Color.fromRGBO(249, 115, 22, 0.85), // Lebih vibrant
-                          Color.fromRGBO(253, 186, 116, 0.85),
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 15,
-                          offset: Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: ScaleTransition(
-                        scale: _logoScale,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          // decoration: BoxDecoration(
-                          //   color: Colors.white.withOpacity(0.2),
-                          //   shape: BoxShape.rectangle,
-                          //   borderRadius: BorderRadius.circular(24),
-                          //   boxShadow: [
-                          //     BoxShadow(
-                          //       color: Colors.black.withOpacity(0.1),
-                          //       blurRadius: 30,
-                          //       spreadRadius: 3,
-                                
-                          //     ),
-                          //   ],
-                          // ),
-                          child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: FadeTransition(
-                        opacity: _logoScale,
-                        child: ScaleTransition(
-                          scale: _logoScale,
-                          child: Image.asset(
-                            "assets/images/logosportspace.png",
-                            width: 180,
-                          ),
-                        ),
-                      ),
-                    ),
-                        ),
-                      ),
-                    ),
-                  ),
+        // 1. LayoutBuilder: Untuk mendapatkan tinggi layar yang tersedia
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // 2. SingleChildScrollView: Agar bisa discroll saat keyboard muncul
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                // 3. ConstrainedBox: Memastikan tinggi minimal konten = tinggi layar
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
                 ),
-
-                const SizedBox(height: 10),
-
-                // --- BAGIAN BAWAH: CARD FORM ---
-                Expanded(
-                  child: FadeTransition(
-                    opacity: _cardOpacity,
-                    child: ScaleTransition(
-                      scale: _cardScale,
-                      child: Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.fromLTRB(24, 10, 24, 30),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 32,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.95),
-                          borderRadius: BorderRadius.circular(32),
-                          boxShadow: [
-                            BoxShadow(
-                              color: navyColor.withOpacity(0.08),
-                              spreadRadius: 4,
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
+                // 4. IntrinsicHeight: Agar widget seperti Spacer() atau Expanded tetap bekerja
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      // --- BAGIAN ATAS: MOTIF & LOGO ---
+                      SlideTransition(
+                        position: _headerOffset,
+                        child: Container(
+                          width: double.infinity,
+                          height: 225,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.vertical(
+                              bottom: Radius.circular(36),
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Header Teks "Welcome Back"
-                            SlideTransition(
-                              position: _itemSlide,
-                              child: FadeTransition(
-                                opacity: _itemFade,
-                                child: Column(
-                                  children: const [
-                                    Text(
-                                      "Welcome Back!",
-                                      style: TextStyle(
-                                        fontSize: 30,
-                                        fontWeight: FontWeight.w900,
-                                        color: navyColor,
-                                        letterSpacing: -0.4,
-                                      ),
-                                    ),
-                                    SizedBox(height: 8),
-                                    Text(
-                                      "Please sign in to continue",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            image: DecorationImage(
+                              image:
+                                  AssetImage("assets/images/orangemotif.png"),
+                              fit: BoxFit.cover,
+                            ),
+                            gradient: LinearGradient(
+                              colors: [
+                                Color.fromRGBO(249, 115, 22, 0.85),
+                                Color.fromRGBO(253, 186, 116, 0.85),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 15,
+                                offset: Offset(0, 8),
                               ),
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // Form Fields dengan Animasi
-                            SlideTransition(
-                              position: _itemSlide,
-                              child: FadeTransition(
-                                opacity: _itemFade,
-                                child: Column(
-                                  children: [
-                                    // Username Input
-                                    _buildModernTextField(
-                                      controller: _usernameController,
-                                      focusNode: _usernameFocus,
-                                      label: "Username",
-                                      icon: Icons.person_outline_rounded,
-                                      color: orangePrimary,
-                                    ),
-
-                                    const SizedBox(height: 20),
-
-                                    // Password Input
-                                    _buildModernTextField(
-                                      controller: _passwordController,
-                                      focusNode: _passwordFocus,
-                                      label: "Password",
-                                      icon: Icons.lock_outline_rounded,
-                                      color: orangePrimary,
-                                      isPassword: true,
-                                      isObscured: !_isPasswordVisible,
-                                      onToggleVisibility: () {
-                                        setState(() {
-                                          _isPasswordVisible =
-                                              !_isPasswordVisible;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            const Spacer(),
-
-                            // Tombol Login
-                            SlideTransition(
-                              position: _itemSlide,
-                              child: FadeTransition(
-                                opacity: _itemFade,
-                                child: _buildLoginButton(request),
-                              ),
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            // Sign Up Link
-                            Center(
-                              child: SlideTransition(
-                                position: _itemSlide,
-                                child: FadeTransition(
-                                  opacity: _itemFade,
-                                  child: RichText(
-                                    text: TextSpan(
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w500,
+                            ],
+                          ),
+                          child: Center(
+                            child: ScaleTransition(
+                              scale: _logoScale,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: FadeTransition(
+                                    opacity: _logoScale,
+                                    child: ScaleTransition(
+                                      scale: _logoScale,
+                                      child: Image.asset(
+                                        "assets/images/logosportspace.png",
+                                        width: 180,
                                       ),
-                                      children: [
-                                        const TextSpan(
-                                          text: "Don't have an account? ",
-                                        ),
-                                        TextSpan(
-                                          text: "Sign Up",
-                                          style: const TextStyle(
-                                            color: Color(
-                                              0xFF84CC16,
-                                            ), // Lime Green
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          recognizer: TapGestureRecognizer()
-                                            ..onTap = () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (_) =>
-                                                      const RegisterPage(),
-                                                ),
-                                              );
-                                            },
-                                        ),
-                                      ],
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+
+                      const SizedBox(height: 10),
+
+                      // --- BAGIAN BAWAH: CARD FORM ---
+                      FadeTransition(
+                        opacity: _cardOpacity,
+                        child: ScaleTransition(
+                          scale: _cardScale,
+                          child: Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.fromLTRB(24, 10, 24, 30),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 32,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.95),
+                              borderRadius: BorderRadius.circular(32),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: navyColor.withOpacity(0.08),
+                                  spreadRadius: 4,
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Header Teks "Welcome Back"
+                                SlideTransition(
+                                  position: _itemSlide,
+                                  child: FadeTransition(
+                                    opacity: _itemFade,
+                                    child: Column(
+                                      children:  [
+                                        Text(
+                                          "Welcome Back!",
+                                          style: GoogleFonts.poppins( // <-- MENGGUNAKAN GOOGLE FONTS
+                                            fontSize: 30, // Ukuran sedikit diperbesar agar lebih impact
+                                            fontWeight: FontWeight.w600, // Paling Tebal (Black)
+                                            color:  Color(0xFF0C2D57),
+                                            letterSpacing: -1.0, // Sedikit dirapatkan agar terlihat solid
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          "Please sign in to continue",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 20),
+
+                                // Form Fields
+                                SlideTransition(
+                                  position: _itemSlide,
+                                  child: FadeTransition(
+                                    opacity: _itemFade,
+                                    child: Column(
+                                      children: [
+                                        _buildModernTextField(
+                                          controller: _usernameController,
+                                          focusNode: _usernameFocus,
+                                          label: "Username",
+                                          icon: Icons.person_outline_rounded,
+                                          color: orangePrimary,
+                                          errorText: _usernameError, // Pass Error
+                                          onChanged: (value) {
+                                            // Hapus error saat user mengetik
+                                            if (_usernameError != null) {
+                                              setState(() {
+                                                _usernameError = null;
+                                              });
+                                            }
+                                          },
+                                        ),
+                                        const SizedBox(height: 20),
+                                        _buildModernTextField(
+                                          controller: _passwordController,
+                                          focusNode: _passwordFocus,
+                                          label: "Password",
+                                          icon: Icons.lock_outline_rounded,
+                                          color: orangePrimary,
+                                          isPassword: true,
+                                          isObscured: !_isPasswordVisible,
+                                          errorText: _passwordError, // Pass Error
+                                          onChanged: (value) {
+                                            // Hapus error saat user mengetik
+                                            if (_passwordError != null) {
+                                              setState(() {
+                                                _passwordError = null;
+                                              });
+                                            }
+                                          },
+                                          onToggleVisibility: () {
+                                            setState(() {
+                                              _isPasswordVisible =
+                                                  !_isPasswordVisible;
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 30),
+
+                                // Tombol Login
+                                SlideTransition(
+                                  position: _itemSlide,
+                                  child: FadeTransition(
+                                    opacity: _itemFade,
+                                    child: _buildLoginButton(request),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // Sign Up Link
+                                Center(
+                                  child: SlideTransition(
+                                    position: _itemSlide,
+                                    child: FadeTransition(
+                                      opacity: _itemFade,
+                                      child: RichText(
+                                        text: TextSpan(
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            color: Colors.grey.shade600,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          children: [
+                                            const TextSpan(
+                                              text: "Don't have an account? ",
+                                            ),
+                                            TextSpan(
+                                              text: "Sign Up",
+                                              style: const TextStyle(
+                                                color: Color(0xFF84CC16),
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              recognizer: TapGestureRecognizer()
+                                                ..onTap = () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          const RegisterPage(),
+                                                    ),
+                                                  );
+                                                },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // SpacerOpsional: Jika ingin Card nempel ke bawah jika layar tinggi
+                      const Spacer(),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
   // --- WIDGET BUILDER HELPERS ---
-
-  Widget _buildModernTextField({
+Widget _buildModernTextField({
     required TextEditingController controller,
     required FocusNode focusNode,
     required String label,
@@ -379,65 +395,127 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     bool isPassword = false,
     bool isObscured = false,
     VoidCallback? onToggleVisibility,
+    String? errorText,
+    Function(String)? onChanged,
   }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: focusNode.hasFocus ? color : Colors.transparent,
-          width: 1.5,
-        ),
-        boxShadow: [
-          if (focusNode.hasFocus)
-            BoxShadow(
-              color: color.withOpacity(0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+    // Logic Error
+    bool hasError = errorText != null && errorText.isNotEmpty;
+    
+    // Warna Border: Merah jika error, Warna Brand jika fokus, Transparan jika idle
+    Color borderColor = hasError
+        ? Colors.red.shade400
+        : (focusNode.hasFocus ? color : Colors.transparent);
+
+    // Warna Icon: Merah jika error, Warna Brand jika fokus, Abu jika idle
+    Color iconColor = hasError
+        ? Colors.red.shade400
+        : (focusNode.hasFocus ? color : Colors.grey.shade400);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. INPUT CONTAINER
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: borderColor,
+              width: 1.5,
             ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        obscureText: isObscured,
-        style: const TextStyle(
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF0C2D57),
+            boxShadow: [
+              // Shadow halus hanya jika fokus & tidak error
+              if (focusNode.hasFocus && !hasError)
+                BoxShadow(
+                  color: color.withOpacity(0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            obscureText: isObscured,
+            onChanged: onChanged,
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF0C2D57),
+            ),
+            decoration: InputDecoration(
+              labelText: label,
+              labelStyle: TextStyle(
+                color: hasError ? Colors.red.shade400 : (focusNode.hasFocus ? color : Colors.grey.shade500),
+                fontSize: 14,
+              ),
+              prefixIcon: Icon(
+                icon,
+                color: iconColor,
+              ),
+              suffixIcon: isPassword
+                  ? IconButton(
+                      icon: Icon(
+                        isObscured
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: Colors.grey.shade400,
+                      ),
+                      onPressed: onToggleVisibility,
+                    )
+                  : null,
+              border: InputBorder.none,
+              // Hapus contentPadding bawaan yang berlebihan agar centered
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
+              ),
+              floatingLabelBehavior: FloatingLabelBehavior.auto,
+            ),
+          ),
         ),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(
-            color: focusNode.hasFocus ? color : Colors.grey.shade500,
-            fontSize: 14,
-          ),
-          prefixIcon: Icon(
-            icon,
-            color: focusNode.hasFocus ? color : Colors.grey.shade400,
-          ),
-          suffixIcon: isPassword
-              ? IconButton(
-                  icon: Icon(
-                    isObscured
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: Colors.grey.shade400,
+
+        // 2. ERROR MESSAGE (DITARUH DI LUAR / DI BAWAH CONTAINER)
+        // Menggunakan AnimatedSwitcher agar munculnya halus
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return SizeTransition(
+              sizeFactor: animation,
+              axisAlignment: -1.0, // Muncul dari atas ke bawah
+              child: FadeTransition(opacity: animation, child: child),
+            );
+          },
+          child: hasError
+              ? Padding(
+                  key: ValueKey<String>(errorText), // Key penting untuk animasi
+                  padding: const EdgeInsets.only(top: 8, left: 12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        size: 16,
+                        color: Colors.red.shade500,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          errorText,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.red.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  onPressed: onToggleVisibility,
                 )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
-          ),
-          floatingLabelBehavior: FloatingLabelBehavior.auto,
+              : const SizedBox.shrink(), // Widget kosong jika tidak ada error
         ),
-      ),
+      ],
     );
   }
-
   Widget _buildLoginButton(CookieRequest request) {
     return MouseRegion(
       onEnter: (_) => !isLoading ? setState(() => buttonScale = 1.05) : null,
@@ -451,25 +529,33 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         onTap: isLoading
             ? null
             : () async {
-                setState(() => isLoading = true);
+                // 1. Reset Error
+                setState(() {
+                  _usernameError = null;
+                  _passwordError = null;
+                  isLoading = true;
+                });
 
                 String username = _usernameController.text;
                 String password = _passwordController.text;
 
-                // --- VALIDASI INPUT KOSONG DISINI ---
-                if (username.isEmpty || password.isEmpty) {
-                  
-                  setState(() => isLoading = false);
-                  showErrorDialog(
-                    context, 
-                    "Username dan Password tidak boleh kosong!"
-                  );
-                  return; // Hentikan proses, jangan lanjut ke loading
+                // 2. Validasi Lokal
+                bool hasLocalError = false;
+                if (username.isEmpty) {
+                  _usernameError = "Username tidak boleh kosong";
+                  hasLocalError = true;
                 }
-                // ------------------------------------
+                if (password.isEmpty) {
+                  _passwordError = "Password tidak boleh kosong";
+                  hasLocalError = true;
+                }
 
-                setState(() => isLoading = true);
+                if (hasLocalError) {
+                  setState(() => isLoading = false);
+                  return;
+                }
 
+                // 3. Request Server
                 final response = await request.login(
                   "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/accounts/login-flutter/",
                   {"username": username, "password": password},
@@ -479,15 +565,45 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
                 if (request.loggedIn) {
                   if (context.mounted) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => HomePage()),
+                    String role = response['role'] ?? 'user';
+
+                    // Navigasi Berdasarkan Role
+                    if (role == 'admin') {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const DashboardAdminPage()),
+                      );
+                    } else {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const HomePage()),
+                      );
+                    }
+
+                    String message = response['message'];
+                    String uname = response['username'];
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("$message Selamat datang, $uname!"),
+                        backgroundColor: const Color(0xFF0C2D57),
+                      ),
                     );
                   }
                 } else {
+                  // 4. Handle Server Error (misal: Password salah)
                   if (context.mounted) {
-                      showErrorDialog(context, response['message']);
-                    }
+                    setState(() {
+                      String message = response['message'] ?? "Login gagal";
+                      // Karena server biasanya return pesan umum "Invalid credentials",
+                      // kita bisa taruh error di kedua field atau salah satu.
+                      // Di sini saya taruh di field password agar user cek lagi.
+                      _passwordError = message;
+                      // Opsional: _usernameError = "Cek kembali username Anda";
+                    });
+                  }
                 }
               },
         child: AnimatedScale(
@@ -515,7 +631,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ],
             ),
             child: Center(
-              // LOGIKA TAMPILAN LOADING VS LOG IN
               child: isLoading
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -528,7 +643,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             color: Color(0xFF0C2D57),
                           ),
                         ),
-                        SizedBox(width: 12), // Jarak ikon loading ke teks
+                        SizedBox(width: 12),
                         Text(
                           "Logging In...",
                           style: TextStyle(

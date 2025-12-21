@@ -287,7 +287,7 @@ class _FriendPageState extends State<FriendPage> {
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(left: 60, bottom: 16),
               expandedTitleScale: 1.9,
-              title: Text("Friends", style: GoogleFonts.poppins(color: primaryNavy, fontWeight: FontWeight.w700, fontSize: 20)),
+              title: Text("Daftar Teman", style: GoogleFonts.poppins(color: primaryNavy, fontWeight: FontWeight.w700, fontSize: 20)),
             ),
           ),
 
@@ -387,7 +387,7 @@ class _FriendPageState extends State<FriendPage> {
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
               child: Row(
                 children: [
-                  Text("All Friends", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: primaryNavy)),
+                  Text("Teman Saya", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: primaryNavy)),
                   const SizedBox(width: 6),
                   if (!_isLoadingFriends)
                     Text("(${_allFriends.length})", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600, color: textGrey)),
