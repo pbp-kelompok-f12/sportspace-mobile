@@ -38,18 +38,20 @@ class ProfileEntry {
     });
 
     factory ProfileEntry.fromJson(Map<String, dynamic> json) => ProfileEntry(
-        username: json["username"],
-        role: json["role"],
-        success: json["success"],
-        message: json["message"],
-        email: json["email"],
-        phone: json["phone"],
-        address: json["address"],
-        photoUrl: json["photo_url"],
-        bio: json["bio"],
-        totalBooking: json["total_booking"],
-        avgRating: json["avg_rating"],
-        joinedDate: json["joined_date"],
+        username: json["username"] ?? "User",
+        role: json["role"] ?? "Customer",
+        success: json["success"] ?? false,
+        message: json["message"] ?? "",
+        email: json["email"] != null ? json["email"].toString() : "-",
+
+        phone: json["phone"] ?? "-",
+        address: json["address"] ?? "-",
+        photoUrl: json["photo_url"] ?? "",
+        bio: json["bio"] ?? "",          
+
+        totalBooking: json["total_booking"] ?? 0,
+        avgRating: json["avg_rating"] ?? 0,
+        joinedDate: json["joined_date"] ?? "-",
     );
 
     Map<String, dynamic> toJson() => {
