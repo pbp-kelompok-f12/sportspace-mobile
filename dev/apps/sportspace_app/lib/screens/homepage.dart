@@ -7,6 +7,9 @@ import 'package:sportspace_app/screens/venue_form.dart';
 import 'package:sportspace_app/screens/venue_list.dart';
 import 'package:sportspace_app/models/lapangan.dart';
 import 'package:sportspace_app/screens/profile/profile_page.dart';
+import 'package:sportspace_app/screens/matchmaking/matchmaking_list_page.dart';
+import 'package:sportspace_app/review/screens/my_reviews_page.dart';
+import 'package:sportspace_app/review/screens/venue_reviews_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,6 +23,8 @@ class _HomePageState extends State<HomePage> {
   // Konstanta untuk tab index
   static const int _tabHome = 0;
   static const int _tabBookings = 1;
+  static const int _tabMatch = 2;
+  static const int _tabMyReviews = 3;
   static const int _tabProfile = 4;
 
   // State untuk Search dan Filter
@@ -35,9 +40,8 @@ class _HomePageState extends State<HomePage> {
     'Jakarta Utara',
   ];
 
-  // --- PERBAIKAN 1: IP Address ---
-  // Gunakan 10.0.2.2 untuk Android Emulator
-  final String baseUrl = "http://127.0.0.1:8000";
+  // Base URL deployment SportSpace (prod)
+  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
 
   late Future<List<Lapangan>> _lapanganFuture;
 
@@ -81,8 +85,6 @@ class _HomePageState extends State<HomePage> {
     final Color darkBlue = const Color(0xFF0D2C3E);
     final Color bottomNavBlue = const Color(0xFF90CAF9);
 
-    // --- PERBAIKAN 2: Logika Navigasi ---
-    // Kita tentukan isi "body" berdasarkan _selectedIndex SEBELUM masuk ke Scaffold
     Widget bodyContent;
 
     if (_selectedIndex == _tabHome) {
@@ -214,13 +216,17 @@ class _HomePageState extends State<HomePage> {
     } else if (_selectedIndex == _tabBookings) {
       // ISI HALAMAN BOOKINGS
       bodyContent = const MyBookingsPage();
+    } else if (_selectedIndex == _tabMatch) {
+      // ISI HALAMAN MATCHMAKING
+      bodyContent = const MatchmakingListPage();
+    } else if (_selectedIndex == _tabMyReviews) {
+      // ISI HALAMAN MY REVIEWS
+      bodyContent = const MyReviewsPage();
     } else if (_selectedIndex == _tabProfile) {
       // ISI HALAMAN PROFILE
       bodyContent = ProfilePage();
-      // bodyContent = ProfilePage();
-      
     } else {
-      // ISI HALAMAN LAIN (Placeholder)
+      // Placeholder
       bodyContent = const Center(child: Text("Coming soon..."));
     }
 
@@ -260,10 +266,7 @@ class _HomePageState extends State<HomePage> {
         child: const Icon(Icons.add, color: Colors.white),
         tooltip: 'Add Venue',
       ),
-
-      // Di sini kita panggil variabel bodyContent yang sudah di-set logic di atas
       body: bodyContent,
-
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: bottomNavBlue,
@@ -282,15 +285,9 @@ class _HomePageState extends State<HomePage> {
           onTap: _onItemTapped,
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.assignment),
-              label: 'Bookings', // Tab baru dari teman Anda
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.sports_tennis),
-              label: 'Match',
-            ),
-            BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Reviews'),
+            BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Bookings'),
+            BottomNavigationBarItem(icon: Icon(Icons.sports_tennis), label: 'Match'),
+            BottomNavigationBarItem(icon: Icon(Icons.star), label: 'My Reviews'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],
         ),
@@ -300,7 +297,6 @@ class _HomePageState extends State<HomePage> {
 
   // WIDGET SEARCH SECTION
   Widget _buildSearchSection(Color darkBlue) {
-    // ... (Kode Search Section sama seperti sebelumnya, tidak perlu diubah)
     return Stack(
       children: [
         Container(height: 100, width: double.infinity, color: darkBlue),
@@ -415,16 +411,12 @@ class _HomePageState extends State<HomePage> {
 }
 
 // --- PERBAIKAN 3: PROXY URL IP ---
-// Pastikan ini juga menggunakan 10.0.2.2
 String getProxyUrl(String originalUrl) {
   if (originalUrl.isEmpty) {
     return "https://via.placeholder.com/150";
   }
-
-  String encodedUrl = Uri.encodeComponent(originalUrl);
-
-  // Gunakan 10.0.2.2 untuk Android Emulator
-  return "http://127.0.0.1:8000/home/proxy-image/?url=$encodedUrl";
+  // Use direct URL to avoid proxy/CORS issues on mobile
+  return originalUrl;
 }
 
 // --- WIDGET CARD: RECOMMENDED ---
@@ -574,7 +566,17 @@ class AllCourtCard extends StatelessWidget {
                       child: SizedBox(
                         height: 32,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VenueReviewsPage(
+                                  venueId: lapangan.pk,
+                                  venueName: lapangan.nama,
+                                ),
+                              ),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF64B5F6),
                             padding: EdgeInsets.zero,
@@ -596,7 +598,6 @@ class AllCourtCard extends StatelessWidget {
                         height: 32,
                         child: ElevatedButton(
                           onPressed: () {
-                            // Integrasi dengan fitur teman Anda
                             Navigator.push(
                               context,
                               MaterialPageRoute(

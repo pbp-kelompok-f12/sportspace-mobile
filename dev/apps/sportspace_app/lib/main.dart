@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
           ).copyWith(secondary: Colors.blueAccent[400]),
         ),
         home: const LoginPage(),
+        debugShowCheckedModeBanner: false,
       ),
     );
   }
