@@ -8,6 +8,8 @@ import 'package:sportspace_app/screens/venue_list.dart';
 import 'package:sportspace_app/models/lapangan.dart';
 import 'package:sportspace_app/screens/profile/profile_page.dart';
 import 'package:sportspace_app/screens/matchmaking/matchmaking_list_page.dart';
+import 'package:sportspace_app/review/screens/my_reviews_page.dart';
+import 'package:sportspace_app/review/screens/venue_reviews_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,7 +23,8 @@ class _HomePageState extends State<HomePage> {
   // Konstanta untuk tab index
   static const int _tabHome = 0;
   static const int _tabBookings = 1;
-  static const int _tabMatch = 2; 
+  static const int _tabMatch = 2;
+  static const int _tabMyReviews = 3;
   static const int _tabProfile = 4;
 
   // State untuk Search dan Filter
@@ -216,6 +219,9 @@ class _HomePageState extends State<HomePage> {
     } else if (_selectedIndex == _tabMatch) {
       // ISI HALAMAN MATCHMAKING
       bodyContent = const MatchmakingListPage();
+    } else if (_selectedIndex == _tabMyReviews) {
+      // ISI HALAMAN MY REVIEWS
+      bodyContent = const MyReviewsPage();
     } else if (_selectedIndex == _tabProfile) {
       // ISI HALAMAN PROFILE
       bodyContent = ProfilePage();
@@ -281,7 +287,7 @@ class _HomePageState extends State<HomePage> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Bookings'),
             BottomNavigationBarItem(icon: Icon(Icons.sports_tennis), label: 'Match'),
-            BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Reviews'),
+            BottomNavigationBarItem(icon: Icon(Icons.star), label: 'My Reviews'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],
         ),
@@ -560,7 +566,17 @@ class AllCourtCard extends StatelessWidget {
                       child: SizedBox(
                         height: 32,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VenueReviewsPage(
+                                  venueId: lapangan.pk,
+                                  venueName: lapangan.nama,
+                                ),
+                              ),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF64B5F6),
                             padding: EdgeInsets.zero,
