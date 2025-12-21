@@ -527,86 +527,75 @@ Widget _buildModernTextField({
         onTapCancel: () =>
             !isLoading ? setState(() => buttonScale = 1.0) : null,
         onTap: isLoading
-            ? null
-            : () async {
-                // 1. Reset Error
-                setState(() {
-                  _usernameError = null;
-                  _passwordError = null;
-                  isLoading = true;
-                });
+    ? null
+    : () async {
+        setState(() {
+          _usernameError = null;
+          _passwordError = null;
+          isLoading = true; // Mulai loading
+        });
 
-                String username = _usernameController.text;
-                String password = _passwordController.text;
+        String username = _usernameController.text;
+        String password = _passwordController.text;
 
-                // 2. Validasi Lokal
-                bool hasLocalError = false;
-                if (username.isEmpty) {
-                  _usernameError = "Username tidak boleh kosong";
-                  hasLocalError = true;
-                }
-                if (password.isEmpty) {
-                  _passwordError = "Password tidak boleh kosong";
-                  hasLocalError = true;
-                }
+        // Validasi Lokal
+        bool hasLocalError = false;
+        if (username.isEmpty) {
+          _usernameError = "Username tidak boleh kosong";
+          hasLocalError = true;
+        }
+        if (password.isEmpty) {
+          _passwordError = "Password tidak boleh kosong";
+          hasLocalError = true;
+        }
 
-                if (hasLocalError) {
-                  setState(() => isLoading = false);
-                  return;
-                }
+        if (hasLocalError) {
+          setState(() => isLoading = false); // Matikan loading hanya jika error input
+          return;
+        }
 
-                // 3. Request Server
-                final response = await request.login(
-                  "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/accounts/login-flutter/",
-                  {"username": username, "password": password},
-                );
+        final response = await request.login(
+          "https://sean-marcello-sportspace.pbp.cs.ui.ac.id/accounts/login-flutter/",
+          {"username": username, "password": password},
+        );
 
-                setState(() => isLoading = false);
+        if (request.loggedIn) {
+          if (context.mounted) {
+            String role = response['role'] ?? 'user';
+            
+            // --- POINT PENTING ---
+            // Jangan panggil setState(() => isLoading = false) di sini!
+            // Biarkan loading tetap berjalan sampai Navigator selesai bekerja.
 
-                if (request.loggedIn) {
-                  if (context.mounted) {
-                    String role = response['role'] ?? 'user';
+            if (role == 'admin') {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const DashboardAdminPage()),
+              );
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+              );
+            }
 
-                    // Navigasi Berdasarkan Role
-                    if (role == 'admin') {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const DashboardAdminPage()),
-                      );
-                    } else {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const HomePage()),
-                      );
-                    }
-
-                    String message = response['message'];
-                    String uname = response['username'];
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("$message Selamat datang, $uname!"),
-                        backgroundColor: const Color(0xFF0C2D57),
-                      ),
-                    );
-                  }
-                } else {
-                  // 4. Handle Server Error (misal: Password salah)
-                  if (context.mounted) {
-                    setState(() {
-                      String message = response['message'] ?? "Login gagal";
-                      // Karena server biasanya return pesan umum "Invalid credentials",
-                      // kita bisa taruh error di kedua field atau salah satu.
-                      // Di sini saya taruh di field password agar user cek lagi.
-                      _passwordError = message;
-                      // Opsional: _usernameError = "Cek kembali username Anda";
-                    });
-                  }
-                }
-              },
-        child: AnimatedScale(
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   SnackBar(
+            //     content: Text("${response['message']} Selamat datang, ${response['username']}!"),
+            //     backgroundColor: const Color(0xFF0C2D57),
+            //   ),
+            // );
+          }
+        } else {
+          // Jika Gagal, baru matikan loading agar user bisa mencoba lagi
+          if (context.mounted) {
+            setState(() {
+              isLoading = false; 
+              _passwordError = response['message'] ?? "Login gagal";
+            });
+          }
+        }
+      },child: AnimatedScale(
           duration: const Duration(milliseconds: 150),
           scale: buttonScale,
           child: Container(

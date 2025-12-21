@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // IMPORT GOOGLE FONTS
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sportspace_app/widgets/editprofilesheet.dart';
-
 import 'package:sportspace_app/models/profile_entry.dart';
 import 'package:sportspace_app/screens/auth/login.dart';
 import 'package:sportspace_app/screens/profile/friendpage.dart';
@@ -18,19 +17,17 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage>
     with TickerProviderStateMixin {
-  // URL SERVER
   final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
   late Future<ProfileEntry> _profileFuture;
 
-  // === PALET WARNA MODERN ===
-  final Color primaryNavy = const Color(0xFF0F172A); // Slate 900
-  final Color primaryBlue = const Color.fromARGB(255, 0, 95, 203); // Blue 500
-  final Color accentOrange = const Color(0xFFF97316); // Orange 500
-  final Color bgLight = const Color(0xFFF1F5F9); // Slate 100
-  final Color textDark = const Color(0xFF1E293B); // Slate 800
-  final Color textGrey = const Color(0xFF64748B); // Slate 500
+  // === PALET WARNA (Sesuai MatchmakingListPage) ===
+  static const Color primaryNavy = Color(0xFF0D2C3E);
+  static const Color softOrange = Color(0xFFFF9F45);
+  static const Color softOrangeDark = Color(0xFFF97316);
+  static const Color backgroundGrey = Color(0xFFF8FAFC);
+  static const Color textDark = Color(0xFF1E293B);
+  static const Color textGrey = Color(0xFF64748B);
 
-  // Animation Controllers
   late AnimationController _entranceController;
 
   @override
@@ -39,12 +36,10 @@ class _ProfilePageState extends State<ProfilePage>
     final request = context.read<CookieRequest>();
     _profileFuture = fetchProfile(request);
 
-    // Setup Entrance Animation
     _entranceController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    // Jalankan animasi setelah build pertama
     Timer(
       const Duration(milliseconds: 100),
       () => _entranceController.forward(),
@@ -80,62 +75,47 @@ class _ProfilePageState extends State<ProfilePage>
     return NetworkImage("$baseUrl$url");
   }
 
-  // LOGOUT LOGIC
-  void _showLogoutConfirmation(BuildContext context, CookieRequest request) {
+  void _showLogoutConfirmation(BuildContext parentContext, CookieRequest request) {
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
+      context: parentContext,
+      builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          surfaceTintColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            "Logout",
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-            "Apakah Anda yakin ingin keluar?",
-            style: GoogleFonts.inter(color: textGrey),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text("Logout",
+              style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold, color: primaryNavy)),
+          content: Text("Apakah Anda yakin ingin keluar?",
+              style: GoogleFonts.poppins(color: textGrey)),
           actions: [
             TextButton(
-              child: Text(
-                'Batal',
-                style: GoogleFonts.inter(
-                  color: textGrey,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text("Batal",
+                  style: GoogleFonts.poppins(color: textGrey, fontWeight: FontWeight.w600)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
+                backgroundColor: Colors.red.shade600,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text(
-                'Keluar',
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+                    borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
               ),
               onPressed: () async {
-                Navigator.pop(context);
-                final response = await request.logout(
-                  "$baseUrl/accounts/logout-flutter/",
-                );
-                if (context.mounted && response['status']) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                Navigator.pop(dialogContext);
+                final response =
+                    await request.logout("$baseUrl/accounts/logout-flutter/");
+                if (!parentContext.mounted) return;
+                if (response['status'] == true) {
+                  Navigator.pushAndRemoveUntil(
+                    parentContext,
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                    (route) => false,
                   );
                 }
               },
+              child: Text("Keluar",
+                  style: GoogleFonts.poppins(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         );
@@ -143,12 +123,8 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  // MODAL EDIT PROFILE
   void _openEditModal(
-    BuildContext context,
-    CookieRequest request,
-    ProfileEntry data,
-  ) {
+      BuildContext context, CookieRequest request, ProfileEntry data) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -161,15 +137,12 @@ class _ProfilePageState extends State<ProfilePage>
           refreshProfile();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                "Profil berhasil diperbarui!",
-                style: GoogleFonts.inter(),
-              ),
-              backgroundColor: const Color(0xFF10B981), // Emerald Green
+              content: Text("Profil berhasil diperbarui!",
+                  style: GoogleFonts.poppins()),
+              backgroundColor: primaryNavy,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+                  borderRadius: BorderRadius.circular(10)),
             ),
           );
         },
@@ -182,39 +155,31 @@ class _ProfilePageState extends State<ProfilePage>
     final request = context.watch<CookieRequest>();
 
     return Scaffold(
-      backgroundColor: bgLight,
+      backgroundColor: backgroundGrey, // Menggunakan background grey yang sama
       body: FutureBuilder<ProfileEntry>(
         future: _profileFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator(color: primaryBlue));
+            return const Center(
+                child: CircularProgressIndicator(color: softOrangeDark));
           }
           if (snapshot.hasError) {
             return Center(
-              child: Text(
-                "Gagal memuat profil",
-                style: GoogleFonts.inter(color: Colors.red),
-              ),
-            );
+                child: Text("Gagal memuat profil",
+                    style: GoogleFonts.poppins(color: Colors.red)));
           }
           if (snapshot.hasData) {
             final data = snapshot.data!;
-
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Column(
                 children: [
                   _buildModernHeader(data, context, request),
-
-                  // Content Body dengan Animasi Slide Up
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       children: [
-                        const SizedBox(
-                          height: 10,
-                        ), // Space untuk foto profil yang overlap
-                        // 1. INFO UTAMA (Nama & Bio)
+                        const SizedBox(height: 10),
                         SlideFadeTransition(
                           controller: _entranceController,
                           delay: 0.1,
@@ -223,211 +188,64 @@ class _ProfilePageState extends State<ProfilePage>
                               Text(
                                 data.username,
                                 style: GoogleFonts.poppins(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: primaryNavy,
-                                ),
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.w800,
+                                    color: primaryNavy,
+                                    letterSpacing: 0.5),
                               ),
                               Container(
-                                margin: const EdgeInsets.only(
-                                  top: 4,
-                                  bottom: 8,
-                                ),
+                                margin: const EdgeInsets.only(top: 6, bottom: 8),
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
+                                    horizontal: 14, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: primaryBlue.withOpacity(0.1),
+                                  color: softOrange.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                      color: softOrange.withOpacity(0.5)),
                                 ),
                                 child: Text(
                                   data.role.toUpperCase(),
-                                  style: GoogleFonts.inter(
+                                  style: GoogleFonts.poppins(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: primaryBlue,
-                                    letterSpacing: 1,
+                                    color: softOrangeDark,
+                                    letterSpacing: 1.2,
                                   ),
                                 ),
                               ),
-                              Text(
-                                data.bio.isEmpty ? "Belum ada bio." : data.bio,
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  color: textGrey,
-                                  height: 1.5,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: Text(
+                                  data.bio.isEmpty
+                                      ? "Belum ada bio."
+                                      : data.bio,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: textGrey,
+                                      height: 1.5),
                                 ),
                               ),
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 24),
-
-                        // 2. STATISTIK CARD
                         SlideFadeTransition(
                           controller: _entranceController,
                           delay: 0.2,
-                          child: Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              // mainAxisAlignment tidak terlalu berpengaruh jika pakai Expanded,
-                              // tapi bisa dihapus atau biarkan default.
-                              children: [
-                                // Item 1: Booking
-                                Expanded(
-                                  child: _buildStatItem(
-                                    "Booking",
-                                    data.totalBooking.toString(),
-                                    Icons.calendar_today_rounded,
-                                    Colors.orange,
-                                  ),
-                                ),
-
-                                // Divider 1 (Lebar tetap)
-                                Container(
-                                  height: 40,
-                                  width: 1,
-                                  color: Colors.grey.shade200,
-                                ),
-
-                                // Item 2: Rating
-                                Expanded(
-                                  child: _buildStatItem(
-                                    "Rating",
-                                    data.avgRating == 0 ? "-": data.avgRating.toString(),
-                                    Icons.star_rounded,
-                                    Colors.amber,
-                                  ),
-                                ),
-
-                                // Divider 2 (Lebar tetap)
-                                Container(
-                                  height: 40,
-                                  width: 1,
-                                  color: Colors.grey.shade200,
-                                ),
-
-                                // Item 3: Joined
-                                Expanded(
-                                  child: _buildStatItem(
-                                    "Joined",
-                                    data.joinedDate, // Pastikan format tanggal sudah string pendek agar rapi
-                                    Icons.verified_user_rounded,
-                                    primaryBlue,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          child: _buildStatCard(data),
                         ),
-
                         const SizedBox(height: 24),
-
-                        // 3. DETAIL INFO (Email, Phone, etc)
                         SlideFadeTransition(
                           controller: _entranceController,
                           delay: 0.3,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Personal Info",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: primaryNavy,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                _buildInfoTile(
-                                  Icons.email_outlined,
-                                  "Email",
-                                  data.email ?? "-",
-                                ),
-                                _buildInfoTile(
-                                  Icons.phone_outlined,
-                                  "Phone",
-                                  data.phone,
-                                ),
-                                _buildInfoTile(
-                                  Icons.location_on_outlined,
-                                  "Address",
-                                  data.address,
-                                ),
-                              ],
-                            ),
-                          ),
+                          child: _buildPersonalInfoCard(data),
                         ),
-
                         const SizedBox(height: 24),
-
-                        // 4. MENU OPTIONS
                         SlideFadeTransition(
                           controller: _entranceController,
                           delay: 0.4,
-                          child: Column(
-                            children: [
-                              _buildMenuButton(
-                                context,
-                                title: "Edit Profile",
-                                icon: Icons.edit_outlined,
-                                color: primaryBlue,
-                                onTap: () =>
-                                    _openEditModal(context, request, data),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildMenuButton(
-                                context,
-                                title: "Friends",
-                                icon: Icons.people_outline_rounded,
-                                color: primaryBlue, // Purple
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (c) => const FriendPage(),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildMenuButton(
-                                context,
-                                title: "Log Out",
-                                icon: Icons.logout_rounded,
-                                color: Colors.redAccent,
-                                onTap: () =>
-                                    _showLogoutConfirmation(context, request),
-                                isDestructive: true,
-                              ),
-                            ],
-                          ),
+                          child: _buildMenuOptions(context, request, data),
                         ),
                         const SizedBox(height: 40),
                       ],
@@ -443,37 +261,35 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  // --- WIDGET BUILDERS ---
-
   Widget _buildModernHeader(
-    ProfileEntry data,
-    BuildContext context,
-    CookieRequest request,
-  ) {
+      ProfileEntry data, BuildContext context, CookieRequest request) {
     return SizedBox(
       height: 280,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
         children: [
-          // Background Gradient
+          // ORANGE GRADIENT HEADER (Sama seperti MatchmakingListPage)
           Container(
             height: 220,
             width: double.infinity,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [primaryNavy, const Color(0xFF1E293B)],
+                colors: [softOrange, softOrangeDark],
               ),
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(40),
                 bottomRight: Radius.circular(40),
               ),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black12, blurRadius: 10, offset: Offset(0, 5))
+              ],
             ),
             child: Stack(
               children: [
-                // Decorative Circle
                 Positioned(
                   top: -50,
                   right: -50,
@@ -481,24 +297,10 @@ class _ProfilePageState extends State<ProfilePage>
                     width: 200,
                     height: 200,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      shape: BoxShape.circle,
-                    ),
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle),
                   ),
                 ),
-                Positioned(
-                  top: 50,
-                  left: -30,
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: accentOrange.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-                // Title
                 Positioned(
                   top: 60,
                   left: 0,
@@ -507,17 +309,16 @@ class _ProfilePageState extends State<ProfilePage>
                     "My Profile",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w600,
-                    ),
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1),
                   ),
                 ),
               ],
             ),
           ),
-
-          // Profile Image
+          // PROFILE IMAGE
           Positioned(
             bottom: 0,
             child: BounceButton(
@@ -530,10 +331,9 @@ class _ProfilePageState extends State<ProfilePage>
                       border: Border.all(color: Colors.white, width: 6),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
-                        ),
+                            color: primaryNavy.withOpacity(0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10))
                       ],
                     ),
                     child: CircleAvatar(
@@ -548,15 +348,11 @@ class _ProfilePageState extends State<ProfilePage>
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: accentOrange,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
+                          color: primaryNavy, // Navy Icon
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3)),
+                      child: const Icon(Icons.camera_alt_rounded,
+                          color: Colors.white, size: 18),
                     ),
                   ),
                 ],
@@ -568,66 +364,116 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
+  Widget _buildStatCard(ProfileEntry data) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+              color: primaryNavy.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 5))
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+              child: _buildStatItem("Booking", data.totalBooking.toString(),
+                  Icons.calendar_month_rounded, softOrangeDark)),
+          _buildDivider(),
+          Expanded(
+              child: _buildStatItem(
+                  "Rating",
+                  data.avgRating == 0 ? "-" : data.avgRating.toString(),
+                  Icons.star_rounded,
+                  softOrangeDark)), // Menggunakan Orange agar konsisten
+          _buildDivider(),
+          Expanded(
+              child: _buildStatItem(
+                  "Joined", data.joinedDate, Icons.verified_user_rounded, primaryNavy)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() =>
+      Container(height: 40, width: 1, color: Colors.grey.shade200);
+
   Widget _buildStatItem(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+      String label, String value, IconData icon, Color color) {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
+        Icon(icon, color: color, size: 24),
         const SizedBox(height: 8),
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: textDark,
-          ),
-        ),
-        Text(label, style: GoogleFonts.inter(fontSize: 12, color: textGrey)),
+        Text(value,
+            style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: primaryNavy)),
+        Text(label,
+            style: GoogleFonts.poppins(fontSize: 12, color: textGrey)),
       ],
+    );
+  }
+
+  Widget _buildPersonalInfoCard(ProfileEntry data) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+              color: primaryNavy.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 5))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Personal Info",
+              style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: primaryNavy)),
+          const SizedBox(height: 20),
+          _buildInfoTile(Icons.email_outlined, "Email", data.email ?? "-"),
+          _buildInfoTile(Icons.phone_outlined, "Phone", data.phone),
+          _buildInfoTile(Icons.location_on_outlined, "Address", data.address),
+        ],
+      ),
     );
   }
 
   Widget _buildInfoTile(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: bgLight,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: textGrey, size: 20),
+                color: softOrange.withOpacity(0.1), // Background Orange tipis
+                borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: softOrangeDark, size: 22), // Icon Orange
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: GoogleFonts.inter(fontSize: 12, color: textGrey),
-                ),
-                Text(
-                  value.isEmpty ? "-" : value,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: textDark,
-                  ),
-                ),
+                Text(label,
+                    style: GoogleFonts.poppins(fontSize: 12, color: textGrey)),
+                const SizedBox(height: 2),
+                Text(value.isEmpty ? "-" : value,
+                    style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: textDark)),
               ],
             ),
           ),
@@ -636,14 +482,39 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
 
-  Widget _buildMenuButton(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-    bool isDestructive = false,
-  }) {
+  Widget _buildMenuOptions(
+      BuildContext context, CookieRequest request, ProfileEntry data) {
+    return Column(
+      children: [
+        _buildMenuButton(context,
+            title: "Edit Profile",
+            icon: Icons.edit_outlined,
+            color: primaryNavy, // Icon Navy
+            onTap: () => _openEditModal(context, request, data)),
+        const SizedBox(height: 12),
+        _buildMenuButton(context,
+            title: "Friends",
+            icon: Icons.people_outline_rounded,
+            color: primaryNavy, // Icon Navy
+            onTap: () => Navigator.push(
+                context, MaterialPageRoute(builder: (c) => const FriendPage()))),
+        const SizedBox(height: 12),
+        _buildMenuButton(context,
+            title: "Log Out",
+            icon: Icons.logout_rounded,
+            color: Colors.red.shade400,
+            onTap: () => _showLogoutConfirmation(context, request),
+            isDestructive: true),
+      ],
+    );
+  }
+
+  Widget _buildMenuButton(BuildContext context,
+      {required String title,
+      required IconData icon,
+      required Color color,
+      required VoidCallback onTap,
+      bool isDestructive = false}) {
     return BounceButton(
       onTap: onTap,
       child: Container(
@@ -653,10 +524,9 @@ class _ProfilePageState extends State<ProfilePage>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
           ],
           border: Border.all(color: Colors.grey.shade100),
         ),
@@ -665,26 +535,19 @@ class _ProfilePageState extends State<ProfilePage>
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12)),
               child: Icon(icon, color: color, size: 22),
             ),
             const SizedBox(width: 16),
-            Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: isDestructive ? Colors.redAccent : textDark,
-              ),
-            ),
+            Text(title,
+                style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isDestructive ? Colors.red.shade400 : primaryNavy)),
             const Spacer(),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: Colors.grey.shade300,
-              size: 16,
-            ),
+            Icon(Icons.arrow_forward_ios_rounded,
+                color: Colors.grey.shade300, size: 16),
           ],
         ),
       ),
@@ -692,41 +555,31 @@ class _ProfilePageState extends State<ProfilePage>
   }
 }
 
-// ==========================
-// ANIMATION HELPERS
-// ==========================
+// ANIMATION HELPERS (Tetap Sama)
 class SlideFadeTransition extends StatelessWidget {
   final AnimationController controller;
   final Widget child;
-  final double delay; // 0.0 to 1.0 based on duration relative
+  final double delay;
 
-  const SlideFadeTransition({
-    super.key,
-    required this.controller,
-    required this.child,
-    this.delay = 0,
-  });
+  const SlideFadeTransition(
+      {super.key,
+      required this.controller,
+      required this.child,
+      this.delay = 0});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
-        final start = delay;
-        final end = (delay + 0.4).clamp(0.0, 1.0);
-
         final curve = CurvedAnimation(
-          parent: controller,
-          curve: Interval(start, end, curve: Curves.easeOutQuart),
-        );
-
+            parent: controller,
+            curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0),
+                curve: Curves.easeOutQuart));
         return Opacity(
-          opacity: curve.value,
-          child: Transform.translate(
-            offset: Offset(0, 50 * (1 - curve.value)),
-            child: child,
-          ),
-        );
+            opacity: curve.value,
+            child: Transform.translate(
+                offset: Offset(0, 50 * (1 - curve.value)), child: child));
       },
       child: child,
     );
@@ -750,13 +603,9 @@ class _BounceButtonState extends State<BounceButton>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.96,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+        vsync: this, duration: const Duration(milliseconds: 100));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+// --- IMPORT WIDGETS ---
+// import 'package:sportspace_app/widgets/sport_appbar.dart'; // HAPUS INI KARENA KITA BUAT LANGSUNG
+import 'package:sportspace_app/widgets/navbar.dart';
+import 'package:sportspace_app/widgets/smooth_indexed_stack.dart'; 
+
+// --- IMPORT SCREENS & MODELS ---
 import 'booking_detail.dart';
 import 'my_bookings.dart';
 import 'package:sportspace_app/screens/venue_form.dart';
@@ -11,6 +19,8 @@ import 'package:sportspace_app/screens/matchmaking/matchmaking_list_page.dart';
 import 'package:sportspace_app/review/screens/my_reviews_page.dart';
 import 'package:sportspace_app/review/screens/venue_reviews_page.dart';
 
+const String kBaseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -20,35 +30,24 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
-  // Konstanta untuk tab index
-  static const int _tabHome = 0;
-  static const int _tabBookings = 1;
-  static const int _tabMatch = 2;
-  static const int _tabMyReviews = 3;
-  static const int _tabProfile = 4;
 
-  // State untuk Search dan Filter
+  // --- Search & Filter State ---
   final TextEditingController _searchController = TextEditingController();
   String _searchKeyword = "";
   String? _selectedLocation;
-
   final List<String> _locations = [
-    'Jakarta Selatan',
-    'Jakarta Pusat',
-    'Jakarta Barat',
-    'Jakarta Timur',
-    'Jakarta Utara',
+    'Jakarta Selatan', 'Jakarta Pusat', 'Jakarta Barat', 
+    'Jakarta Timur', 'Jakarta Utara'
   ];
-
-  // Base URL deployment SportSpace (prod)
-  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
 
   late Future<List<Lapangan>> _lapanganFuture;
 
-  @override
-  void initState() {
-    super.initState();
-  }
+  // === COLOR PALETTE (Navy & Orange Theme) ===
+  static const Color primaryNavy = Color(0xFF0D2C3E);
+  static const Color softOrange = Color(0xFFFF9F45);
+  static const Color backgroundWhite = Colors.white;
+  static const Color textGrey = Color(0xFF64748B);
+  static const Color lightGreyFill = Color(0xFFF1F5F9); 
 
   @override
   void didChangeDependencies() {
@@ -58,12 +57,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<List<Lapangan>> fetchLapangans(CookieRequest request) async {
-    final response = await request.get('$baseUrl/home/api/lapangan/');
+    final response = await request.get('$kBaseUrl/home/api/lapangan/');
     List<Lapangan> listLapangan = [];
     for (var d in response) {
-      if (d != null) {
-        listLapangan.add(Lapangan.fromJson(d));
-      }
+      if (d != null) listLapangan.add(Lapangan.fromJson(d));
     }
     return listLapangan;
   }
@@ -80,391 +77,392 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final Color darkBlue = const Color(0xFF0D2C3E);
-    final Color bottomNavBlue = const Color(0xFF90CAF9);
-
-    Widget bodyContent;
-
-    if (_selectedIndex == _tabHome) {
-      // ISI HALAMAN HOME
-      bodyContent = FutureBuilder<List<Lapangan>>(
-        future: _lapanganFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("Tidak ada data lapangan"));
-          }
-
-          final allCourtsRaw = snapshot.data!;
-
-          // Logic Recommended
-          List<Lapangan> recommendedCourts = allCourtsRaw
-              .where((l) => l.isFeatured)
-              .toList();
-          if (recommendedCourts.isEmpty && allCourtsRaw.isNotEmpty) {
-            recommendedCourts = allCourtsRaw.take(5).toList();
-          }
-
-          // Logic Filter
-          final filteredCourts = allCourtsRaw.where((court) {
-            final nameMatches = court.nama.toLowerCase().contains(
-              _searchKeyword.toLowerCase(),
-            );
-            final locationMatches =
-                _selectedLocation == null ||
-                court.alamat.toLowerCase().contains(
-                  _selectedLocation!.toLowerCase(),
-                );
-            return nameMatches && locationMatches;
-          }).toList();
-
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSearchSection(darkBlue),
-                const SizedBox(height: 20),
-
-                // Recommended Section
-                if (recommendedCourts.isNotEmpty) ...[
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      "Recommended Courts",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0D2C3E),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 220,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.only(left: 16),
-                      itemCount: recommendedCourts.length,
-                      itemBuilder: (context, index) {
-                        return RecommendedCard(
-                          lapangan: recommendedCourts[index],
-                        );
-                      },
-                    ),
-                  ),
-                ],
-
-                // All Courts Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "All Courts",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0D2C3E),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const VenueListPage(isMyVenue: false),
-                            ),
-                          );
-                        },
-                        child: const Text("See All"),
-                      ),
-                    ],
-                  ),
-                ),
-
-                if (filteredCourts.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
-                      "No courts found matching your search.",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                else
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: filteredCourts.length,
-                    itemBuilder: (context, index) {
-                      return AllCourtCard(lapangan: filteredCourts[index]);
-                    },
-                  ),
-                const SizedBox(height: 80),
-              ],
-            ),
-          );
-        },
-      );
-    } else if (_selectedIndex == _tabBookings) {
-      // ISI HALAMAN BOOKINGS
-      bodyContent = const MyBookingsPage();
-    } else if (_selectedIndex == _tabMatch) {
-      // ISI HALAMAN MATCHMAKING
-      bodyContent = const MatchmakingListPage();
-    } else if (_selectedIndex == _tabMyReviews) {
-      // ISI HALAMAN MY REVIEWS
-      bodyContent = const MyReviewsPage();
-    } else if (_selectedIndex == _tabProfile) {
-      // ISI HALAMAN PROFILE
-      bodyContent = ProfilePage();
-    } else {
-      // Placeholder
-      bodyContent = const Center(child: Text("Coming soon..."));
-    }
-
+  // ============================================================
+  // 1. KONTEN TAB HOME (PUNYA SCAFFOLD SENDIRI)
+  // ============================================================
+  Widget _buildHomeTab() {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundWhite,
+      
+      // --- APP BAR MODERN (LANGSUNG DI SINI) ---
       appBar: AppBar(
-        backgroundColor: darkBlue,
+        backgroundColor: Colors.transparent, // Transparan karena pakai Gradient
         elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundColor: Colors.white,
-            backgroundImage: const AssetImage(
-              'assets/images/logosportspace.png',
+        centerTitle: false,
+        automaticallyImplyLeading: false, // Matikan tombol back otomatis
+        
+        // Background Gradient (Navy -> Orange)
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [softOrange, primaryNavy], 
             ),
+            boxShadow: [
+              BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+            ]
           ),
         ),
-        title: const Text(
-          "SportSpace",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+
+        // Judul & Logo
+        title: Row(
+          children: [
+            // Logo Image (Pastikan asset ada, jika tidak pakai Icon fallback)
+            Image.asset(
+              'assets/images/logosportspace.png', // Ganti path sesuai asset Anda
+              height: 32,
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.sports_tennis, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              "SportSpace",
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.w700, // Bold
+                fontSize: 20,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
         ),
+
+        // Aksi Kanan (Notifikasi)
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined, color: Colors.white),
             onPressed: () {},
           ),
+          const SizedBox(width: 8), // Padding kanan
         ],
       ),
+      // --- END APP BAR ---
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const VenueFormPage()),
-          );
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const VenueFormPage()));
         },
-        backgroundColor: const Color(0xFF7CB342),
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: softOrange, 
         tooltip: 'Add Venue',
+        child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: bodyContent,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: bottomNavBlue,
-          border: const Border(
-            top: BorderSide(color: Colors.black12, width: 0.5),
-          ),
-        ),
-        child: BottomNavigationBar(
-          backgroundColor: bottomNavBlue,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Colors.black,
-          unselectedItemColor: Colors.black54,
-          showUnselectedLabels: true,
-          elevation: 0,
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Bookings'),
-            BottomNavigationBarItem(icon: Icon(Icons.sports_tennis), label: 'Match'),
-            BottomNavigationBarItem(icon: Icon(Icons.star), label: 'My Reviews'),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-          ],
-        ),
-      ),
+      
+      body: _buildHomeBodyContent(),
     );
   }
 
-  // WIDGET SEARCH SECTION
-  Widget _buildSearchSection(Color darkBlue) {
-    return Stack(
-      children: [
-        Container(height: 100, width: double.infinity, color: darkBlue),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
+  // ============================================================
+  // 2. ISI KONTEN HOME (Search + List Lapangan)
+  // ============================================================
+  Widget _buildHomeBodyContent() {
+    return FutureBuilder<List<Lapangan>>(
+      future: _lapanganFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: softOrange));
+        } else if (snapshot.hasError) {
+          return Center(child: Text("Error: ${snapshot.error}", style: GoogleFonts.poppins()));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text("Tidak ada data lapangan", style: GoogleFonts.poppins()));
+        }
+
+        final allCourtsRaw = snapshot.data!;
+        List<Lapangan> recommendedCourts = allCourtsRaw.where((l) => l.isFeatured).toList();
+        if (recommendedCourts.isEmpty && allCourtsRaw.isNotEmpty) {
+          recommendedCourts = allCourtsRaw.take(5).toList();
+        }
+
+        final filteredCourts = allCourtsRaw.where((court) {
+          final nameMatches = court.nama.toLowerCase().contains(_searchKeyword.toLowerCase());
+          final locationMatches = _selectedLocation == null || court.alamat.toLowerCase().contains(_selectedLocation!.toLowerCase());
+          return nameMatches && locationMatches;
+        }).toList();
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 100), 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Book Padel Courts Near You",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+              _buildSearchSection(),
+              const SizedBox(height: 20),
+
+              if (recommendedCourts.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text("Recommended Courts", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: primaryNavy)),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: "Search Courts..",
-                  hintStyle: TextStyle(color: Colors.grey[600]),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 210, 
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.only(left: 16, bottom: 10), 
+                    itemCount: recommendedCourts.length,
+                    itemBuilder: (context, index) {
+                      return RecommendedCard(lapangan: recommendedCourts[index]);
+                    },
                   ),
                 ),
-                onSubmitted: (_) => _performSearch(),
+              ],
+
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("All Courts", style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: primaryNavy)),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const VenueListPage(isMyVenue: false)));
+                      },
+                      child: Text("See All", style: GoogleFonts.poppins(color: softOrange, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          isExpanded: true,
-                          hint: const Text("Pilih Lokasi"),
-                          value: _selectedLocation,
-                          icon: const Icon(Icons.keyboard_arrow_down),
-                          items: [
-                            const DropdownMenuItem<String>(
-                              value: null,
-                              child: Text("Pilih Lokasi"),
-                            ),
-                            ..._locations.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                              );
-                            }),
-                          ],
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _selectedLocation = newValue;
-                            });
-                          },
+              if (filteredCourts.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text("No courts found matching your search.", style: GoogleFonts.poppins(color: textGrey)),
+                )
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: filteredCourts.length,
+                  itemBuilder: (context, index) {
+                    return AllCourtCard(lapangan: filteredCourts[index]);
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // 3. BUILD UTAMA (PARENT SCAFFOLD)
+  // ============================================================
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      _buildHomeTab(), 
+      LazyLoadPage(index: 1, currentIndex: _selectedIndex, child: const MyBookingsPage()),
+      LazyLoadPage(index: 2, currentIndex: _selectedIndex, child: const MatchmakingListPage()),
+      LazyLoadPage(index: 3, currentIndex: _selectedIndex, child: const MyReviewsPage()),
+      LazyLoadPage(index: 4, currentIndex: _selectedIndex, child: const ProfilePage()),
+    ];
+
+    return Scaffold(
+      backgroundColor: backgroundWhite,
+      body: SmoothIndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: SportSpaceNavBar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
+      ),
+    );
+  }
+
+  // ============================================================
+  // 4. HELPER WIDGETS
+  // ============================================================
+  
+  Widget _buildSearchSection() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Book Padel Courts\nNear You",
+            style: GoogleFonts.poppins(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: primaryNavy,
+              height: 1.2
+            ),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            controller: _searchController,
+            style: GoogleFonts.poppins(color: primaryNavy),
+            decoration: InputDecoration(
+              hintText: "Search Courts..",
+              hintStyle: GoogleFonts.poppins(color: textGrey),
+              prefixIcon: const Icon(Icons.search, color: primaryNavy),
+              filled: true,
+              fillColor: lightGreyFill,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                 borderRadius: BorderRadius.circular(16),
+                 borderSide: const BorderSide(color: softOrange, width: 1.5)
+              )
+            ),
+            onSubmitted: (_) => _performSearch(),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: lightGreyFill,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      hint: Text("Pilih Lokasi", style: GoogleFonts.poppins(color: textGrey)),
+                      value: _selectedLocation,
+                      icon: const Icon(Icons.keyboard_arrow_down, color: primaryNavy),
+                      dropdownColor: Colors.white,
+                      items: [
+                        DropdownMenuItem<String>(
+                          value: null,
+                          child: Text("Semua Lokasi", style: GoogleFonts.poppins(color: primaryNavy)),
                         ),
-                      ),
+                        ..._locations.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value, style: GoogleFonts.poppins(color: primaryNavy)),
+                          );
+                        }),
+                      ],
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedLocation = newValue;
+                        });
+                      },
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 1,
-                    child: ElevatedButton(
-                      onPressed: _performSearch,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5C9DFF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: const Text(
-                        "Search",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 1,
+                child: ElevatedButton(
+                  onPressed: _performSearch,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryNavy,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
                   ),
-                ],
+                  child: Text(
+                    "Search",
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  ),
+                ),
               ),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-// --- PERBAIKAN 3: PROXY URL IP ---
-String getProxyUrl(String originalUrl) {
-  if (originalUrl.isEmpty) {
-    return "https://via.placeholder.com/150";
+// --- HELPER FUNCTIONS & CLASSES ---
+
+ImageProvider getImageProvider(String? url) {
+  if (url == null || url.isEmpty || url == "null") {
+    return const AssetImage("assets/images/logosportspace.png"); 
   }
-  // Use direct URL to avoid proxy/CORS issues on mobile
-  return originalUrl;
+  if (url.startsWith('http')) {
+    String encodedUrl = Uri.encodeComponent(url);
+    return NetworkImage("$kBaseUrl/home/proxy-image/?url=$encodedUrl");
+  }
+  return NetworkImage("$kBaseUrl$url");
 }
 
-// --- WIDGET CARD: RECOMMENDED ---
+class LazyLoadPage extends StatefulWidget {
+  final Widget child;
+  final int index;
+  final int currentIndex;
+
+  const LazyLoadPage({super.key, required this.child, required this.index, required this.currentIndex});
+
+  @override
+  State<LazyLoadPage> createState() => _LazyLoadPageState();
+}
+
+class _LazyLoadPageState extends State<LazyLoadPage> {
+  bool _hasBeenLoaded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.currentIndex == widget.index) {
+      _hasBeenLoaded = true;
+    }
+    return _hasBeenLoaded ? widget.child : const SizedBox();
+  }
+}
+
+// === CARDS ===
+
 class RecommendedCard extends StatelessWidget {
   final Lapangan lapangan;
-
   const RecommendedCard({super.key, required this.lapangan});
 
   @override
   Widget build(BuildContext context) {
-    final String imageUrl = getProxyUrl(lapangan.thumbnail);
-
     return Container(
-      width: 180,
-      margin: const EdgeInsets.only(right: 16),
+      width: 160,
+      margin: const EdgeInsets.only(right: 16, top: 5, bottom: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(20),
-              bottom: Radius.circular(20),
-            ),
-            child: Container(
-              height: 120,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            child: SizedBox(
+              height: 100,
               width: double.infinity,
-              margin: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Image.network(
-                imageUrl,
+              child: Image(
+                image: getImageProvider(lapangan.thumbnail),
                 fit: BoxFit.cover,
-                errorBuilder: (ctx, _, __) {
-                  return Container(
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.broken_image, color: Colors.grey),
-                  );
-                },
+                errorBuilder: (ctx, _, __) => Container(color: const Color(0xFFF1F5F9), child: const Icon(Icons.broken_image, color: Colors.grey)),
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -472,23 +470,26 @@ class RecommendedCard extends StatelessWidget {
                   lapangan.nama,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFFFF9800),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: GoogleFonts.poppins(color: _HomePageState.primaryNavy, fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   lapangan.alamat.split(',')[0],
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.grey[700],
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: GoogleFonts.poppins(color: _HomePageState.textGrey, fontSize: 12),
                 ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.star_rounded, color: _HomePageState.softOrange, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      "${lapangan.rating}",
+                      style: GoogleFonts.poppins(color: _HomePageState.primaryNavy, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                )
               ],
             ),
           ),
@@ -498,39 +499,37 @@ class RecommendedCard extends StatelessWidget {
   }
 }
 
-// --- WIDGET CARD: ALL COURTS ---
 class AllCourtCard extends StatelessWidget {
   final Lapangan lapangan;
-
   const AllCourtCard({super.key, required this.lapangan});
 
   @override
   Widget build(BuildContext context) {
-    final String imageUrl = getProxyUrl(lapangan.thumbnail);
-
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFEEEEEE),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.network(
-              imageUrl,
-              width: 100,
-              height: 100,
+            borderRadius: BorderRadius.circular(16),
+            child: Image(
+              image: getImageProvider(lapangan.thumbnail),
+              width: 90,
+              height: 90,
               fit: BoxFit.cover,
-              errorBuilder: (ctx, _, __) => Container(
-                width: 100,
-                height: 100,
-                color: Colors.grey[300],
-                child: const Icon(Icons.broken_image, color: Colors.grey),
-              ),
+              errorBuilder: (ctx, _, __) => Container(width: 90, height: 90, color: const Color(0xFFF1F5F9), child: const Icon(Icons.broken_image, color: Colors.grey)),
             ),
           ),
           const SizedBox(width: 12),
@@ -540,88 +539,61 @@ class AllCourtCard extends StatelessWidget {
               children: [
                 Text(
                   lapangan.nama,
-                  style: const TextStyle(
-                    color: Color(0xFFFF9800),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: GoogleFonts.poppins(color: _HomePageState.primaryNavy, fontWeight: FontWeight.bold, fontSize: 16),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   lapangan.alamat.split(',')[0],
-                  style: TextStyle(
-                    color: Colors.grey[800],
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
+                  style: GoogleFonts.poppins(color: _HomePageState.textGrey, fontSize: 13),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  "Rating: ${lapangan.rating}",
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.star_rounded, color: _HomePageState.softOrange, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      "${lapangan.rating}",
+                      style: GoogleFonts.poppins(color: _HomePageState.textGrey, fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
                       child: SizedBox(
-                        height: 32,
-                        child: ElevatedButton(
+                        height: 36,
+                        child: OutlinedButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => VenueReviewsPage(
-                                  venueId: lapangan.pk,
-                                  venueName: lapangan.nama,
-                                ),
-                              ),
-                            );
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => VenueReviewsPage(venueId: lapangan.pk, venueName: lapangan.nama)));
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF64B5F6),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _HomePageState.primaryNavy,
+                            side: const BorderSide(color: _HomePageState.primaryNavy),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            elevation: 0,
                           ),
-                          child: const Text(
-                            "Review",
-                            style: TextStyle(color: Colors.white, fontSize: 12),
-                          ),
+                          child: Text("Review", style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: SizedBox(
-                        height: 32,
+                        height: 36,
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => BookingDetailPage(
-                                  lapanganPk: lapangan.pk,
-                                  nama: lapangan.nama,
-                                  alamat: lapangan.alamat,
-                                  imageUrl: lapangan.thumbnail,
-                                ),
-                              ),
-                            );
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => BookingDetailPage(lapanganPk: lapangan.pk, nama: lapangan.nama, alamat: lapangan.alamat, imageUrl: lapangan.thumbnail)));
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF7CB342),
+                            backgroundColor: _HomePageState.softOrange,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
                             elevation: 0,
                           ),
-                          child: const Text(
-                            "Book",
-                            style: TextStyle(color: Colors.white, fontSize: 12),
-                          ),
+                          child: Text("Book", style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
                         ),
                       ),
                     ),
