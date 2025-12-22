@@ -19,7 +19,7 @@ class ProfileEntry {
     String photoUrl;
     String bio;
     int totalBooking;
-    int avgRating;
+    double avgRating;
     String joinedDate;
 
     ProfileEntry({

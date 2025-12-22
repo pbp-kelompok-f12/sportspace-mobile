@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import '../services/review_api.dart';
@@ -8,11 +10,13 @@ import '../widgets/venue_review_card.dart';
 class VenueReviewsPage extends StatefulWidget {
   final int venueId;
   final String venueName;
+  final String venueImageUrl; 
 
   const VenueReviewsPage({
     super.key,
     required this.venueId,
-    required this.venueName
+    required this.venueName,
+    required this.venueImageUrl, 
   });
 
   @override
@@ -21,40 +25,28 @@ class VenueReviewsPage extends StatefulWidget {
 
 class _VenueReviewsPageState extends State<VenueReviewsPage> {
   Future<List<Review>>? _futureReviews;
-
   final TextEditingController _emptyCtrl = TextEditingController();
   bool _emptyAnonymous = false;
   bool _isSubmitting = false;
-
   String _selectedSort = 'newest';
 
-  final Color _headerBlue = const Color(0xFF638ECB);
-  final Color _titleOrange = const Color(0xFFE87C26);
-  final Color _submitGreen = const Color(0xFF709F13);
+  static const Color primaryNavy = Color(0xFF0D2C3E);
+  static const Color softOrange = Color(0xFFFF9F45);
+  static const Color softOrangeDark = Color(0xFFF97316);
+  static const Color backgroundGrey = Color(0xFFF8FAFC);
+  static const Color textGrey = Color(0xFF64748B);
 
   final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
 
-  String _getProxiedUrl(String originalUrl) {
-    if (originalUrl.isEmpty) return "";
-
-    if (originalUrl.startsWith("http")) {
-      return originalUrl;
+  ImageProvider _getVenueImage(String? url) {
+    if (url == null || url.isEmpty || url == "null") {
+      return const AssetImage("assets/images/imagenotavail.png");
     }
-
-    String targetUrl = originalUrl;
-    if (originalUrl.startsWith('/')) {
-      targetUrl = "$baseUrl$originalUrl";
+    if (url.startsWith('http')) {
+      String encodedUrl = Uri.encodeComponent(url);
+      return NetworkImage("$baseUrl/review/proxy-image/?url=$encodedUrl");
     }
-
-    String encodedUrl = Uri.encodeComponent(targetUrl);
-    return "$baseUrl/review/proxy-image/?url=$encodedUrl";
-  }
-
-  String _getStaticUrl(String path) {
-    if (path.startsWith('/')) {
-      return "$baseUrl$path";
-    }
-    return "$baseUrl/$path";
+    return NetworkImage("$baseUrl$url");
   }
 
   void _showAddReviewDialog(CookieRequest request) {
@@ -67,89 +59,60 @@ class _VenueReviewsPageState extends State<VenueReviewsPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) {
           return AlertDialog(
-            scrollable: true,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             title: Text(
-                "Review ${widget.venueName}",
-                style: TextStyle(color: _titleOrange, fontWeight: FontWeight.bold, fontSize: 20)
+              "Review ${widget.venueName}",
+              style: GoogleFonts.poppins(color: primaryNavy, fontWeight: FontWeight.bold, fontSize: 18)
             ),
-
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Your Experience", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text("Your Experience", style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13, color: textGrey)),
                 const SizedBox(height: 8),
                 TextField(
                   controller: commentCtrl,
                   maxLines: 4,
                   maxLength: 150,
+                  style: GoogleFonts.poppins(fontSize: 14),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.grey.shade100,
+                    fillColor: backgroundGrey,
                     hintText: "How was the court? Tell us...",
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                   ),
                 ),
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: Checkbox(
-                        activeColor: _submitGreen,
-                        value: isAnonymous,
-                        onChanged: (val) => setStateDialog(() => isAnonymous = val ?? false),
-                      ),
+                    Checkbox(
+                      activeColor: softOrangeDark,
+                      value: isAnonymous,
+                      onChanged: (val) => setStateDialog(() => isAnonymous = val ?? false),
                     ),
-                    const SizedBox(width: 8),
-                    const Text("Post as Anonymous", style: TextStyle(fontSize: 14)),
+                    Text("Post as Anonymous", style: GoogleFonts.poppins(fontSize: 13, color: primaryNavy)),
                   ],
                 ),
               ],
             ),
-
-            actionsAlignment: MainAxisAlignment.end,
-            actionsPadding: const EdgeInsets.only(bottom: 20, right: 20),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-              ),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel", style: GoogleFonts.poppins(color: textGrey))),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _submitGreen,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: primaryNavy, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 onPressed: isSubmittingDialog ? null : () async {
                   if (commentCtrl.text.trim().isEmpty) return;
                   setStateDialog(() => isSubmittingDialog = true);
                   try {
                     final res = await ReviewApi.createReview(request, widget.venueId, commentCtrl.text, isAnonymous);
-
                     if (res['status'] == 'success') {
                       if (context.mounted) Navigator.pop(context);
-
-                      setState(() {
-                        _futureReviews = ReviewApi.getVenueReviews(request, widget.venueId);
-                      });
-
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Review posted successfully!")));
-                    } else {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? "Failed")));
-                        setStateDialog(() => isSubmittingDialog = false);
-                      }
+                      setState(() { _futureReviews = ReviewApi.getVenueReviews(request, widget.venueId); });
                     }
-                  } catch (e) {
-                    if (context.mounted) setStateDialog(() => isSubmittingDialog = false);
-                  }
+                  } catch (e) {}
                 },
-                child: isSubmittingDialog
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text("Post", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: isSubmittingDialog 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Text("Post", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ],
           );
@@ -164,382 +127,228 @@ class _VenueReviewsPageState extends State<VenueReviewsPage> {
     _futureReviews ??= ReviewApi.getVenueReviews(request, widget.venueId);
 
     String currentUsername = "";
-    try {
-      if (request.jsonData.isNotEmpty) {
-        currentUsername = request.jsonData['username'] ?? "";
-      }
-    } catch (e) {
-    }
+    try { if (request.jsonData.isNotEmpty) currentUsername = request.jsonData['username'] ?? ""; } catch (e) {}
 
     return Scaffold(
-      backgroundColor: Colors.white,
-
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        iconTheme: IconThemeData(color: _titleOrange),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          "Reviews for ${widget.venueName}",
-          style: TextStyle(
-            color: _titleOrange,
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: Colors.grey.shade200, height: 1.0),
-        ),
-      ),
-
-      body: FutureBuilder(
+      backgroundColor: backgroundGrey,
+      body: FutureBuilder<List<Review>>(
         future: _futureReviews,
-        builder: (context, AsyncSnapshot<List<Review>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator(color: _headerBlue));
-          }
+        builder: (context, snapshot) {
+          final reviews = snapshot.data ?? [];
+          
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // 1. GAMBAR VENUE (HEADER)
+              SliverAppBar(
+                expandedHeight: 250,
+                pinned: true,
+                elevation: 0,
+                backgroundColor: primaryNavy,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.black26,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                ),
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Image(
+                    image: _getVenueImage(widget.venueImageUrl),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Image.asset(
+                      "assets/images/imagenotavail.png",
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
 
-          List<Review> reviews = List.from(snapshot.data ?? []);
+              // 2. INFORMASI VENUE (NAMA & RATING) - PASTI DI BAWAH GAMBAR
+              SliverToBoxAdapter(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(32),
+                      bottomRight: Radius.circular(32),
+                    ),
+                    boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 2))],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.venueName,
+                        style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: primaryNavy),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildRatingSummary(reviews),
+                    ],
+                  ),
+                ),
+              ),
 
-          if (reviews.isEmpty) {
-            return _buildEmptyState(request);
-          }
-
-          if (_selectedSort == 'newest') {
-            reviews.sort((a, b) => b.reviewedAt.compareTo(a.reviewedAt));
-          } else if (_selectedSort == 'oldest') {
-            reviews.sort((a, b) => a.reviewedAt.compareTo(b.reviewedAt));
-          }
-
-          String? venueImageUrl = reviews.isNotEmpty ? reviews[0].venueImage : null;
-
-          List<Widget> reviewRows = [];
-          if (reviews.isNotEmpty) {
-            for (int i = 0; i < reviews.length; i += 2) {
-              final review1 = reviews[i];
-              Review? review2;
-              if (i + 1 < reviews.length) {
-                review2 = reviews[i + 1];
-              }
-
-              reviewRows.add(
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: IntrinsicHeight(
+              // 3. SORT CHIPS
+              if (reviews.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Expanded(child: VenueReviewCard(review: review1)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: review2 != null
-                              ? VenueReviewCard(review: review2)
-                              : const SizedBox(),
-                        ),
+                        _buildSortChip('Terbaru', 'newest'),
+                        const SizedBox(width: 8),
+                        _buildSortChip('Terlama', 'oldest'),
                       ],
                     ),
                   ),
                 ),
-              );
-            }
-          }
 
-          return Scaffold(
-            backgroundColor: Colors.white,
-            body: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 180,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.grey.shade200,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: (venueImageUrl != null && venueImageUrl.isNotEmpty)
-                            ? Image.network(
-                          _getProxiedUrl(venueImageUrl),
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                                child: CircularProgressIndicator(color: _headerBlue)
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Image.network(
-                              _getStaticUrl("/static/img/no-photo-venue.png"),
-                              fit: BoxFit.cover,
-                              errorBuilder: (c, e, s) => const Center(
-                                child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
-                              ),
-                            );
-                          },
-                        )
-                            : Image.network(
-                          _getStaticUrl("/static/img/no-photo-venue.png"),
-                          fit: BoxFit.cover,
-                          errorBuilder: (c, e, s) => const Center(
-                            child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    _buildRatingSummary(reviews),
-
-                    const SizedBox(height: 12),
-
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildSortChip('Terbaru', 'newest'),
-                          const SizedBox(width: 8),
-                          _buildSortChip('Terlama', 'oldest'),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    Column(children: reviewRows),
-                    const SizedBox(height: 80),
-                  ],
-                ),
-              ),
-            ),
-
-            floatingActionButton: (!hasUserReviewed(reviews, currentUsername))
-                ? FloatingActionButton.extended(
-              backgroundColor: _headerBlue,
-              onPressed: () => _showAddReviewDialog(request),
-              icon: const Icon(Icons.edit, color: Colors.white),
-              label: const Text("Write Review", style: TextStyle(color: Colors.white)),
-            )
-                : null,
+              // 4. REVIEW LIST ATAU EMPTY STATE
+              snapshot.connectionState == ConnectionState.waiting
+                ? const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: softOrangeDark)))
+                : reviews.isEmpty
+                    ? SliverToBoxAdapter(child: _buildEmptyStateContent(request))
+                    : _buildReviewGrid(reviews),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: FutureBuilder<List<Review>>(
+        future: _futureReviews,
+        builder: (context, snapshot) {
+          final reviews = snapshot.data ?? [];
+          if (hasUserReviewed(reviews, currentUsername)) return const SizedBox();
+          return FloatingActionButton.extended(
+            heroTag: "fab_venue_review_unique",
+            backgroundColor: primaryNavy,
+            onPressed: () => _showAddReviewDialog(request),
+            icon: const Icon(Icons.edit_note_rounded, color: Colors.white),
+            label: Text("Write Review", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w600)),
           );
         },
       ),
     );
   }
 
-  Widget _buildSortChip(String label, String value) {
-    bool isSelected = _selectedSort == value;
-    return ChoiceChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : Colors.black87,
-          fontSize: 12,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+  Widget _buildReviewGrid(List<Review> reviews) {
+    List<Review> sortedReviews = List.from(reviews);
+    if (_selectedSort == 'newest') {
+      sortedReviews.sort((a, b) => b.reviewedAt.compareTo(a.reviewedAt));
+    } else {
+      sortedReviews.sort((a, b) => a.reviewedAt.compareTo(b.reviewedAt));
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          mainAxisExtent: 190, 
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => VenueReviewCard(review: sortedReviews[index]),
+          childCount: sortedReviews.length,
         ),
       ),
-      selected: isSelected,
-      selectedColor: _headerBlue,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? _headerBlue : Colors.grey.shade300,
-        ),
-      ),
-      onSelected: (bool selected) {
-        if (selected) {
-          setState(() {
-            _selectedSort = value;
-          });
-        }
-      },
     );
   }
 
   Widget _buildRatingSummary(List<Review> reviews) {
-    double totalRating = 0;
-    for (var r in reviews) {
-      totalRating += r.rating;
-    }
-    double avgRating = reviews.isNotEmpty ? (totalRating / reviews.length) : 0.0;
+    double avgRating = reviews.isNotEmpty 
+        ? (reviews.map((r) => r.rating).reduce((a, b) => a + b) / reviews.length) 
+        : 0.0;
+    return Row(
+      children: [
+        Text(avgRating.toStringAsFixed(1), style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: primaryNavy)),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: List.generate(5, (index) => Icon(index < avgRating.round() ? Icons.star_rounded : Icons.star_outline_rounded, color: const Color(0xFFFFC107), size: 18))),
+            Text("${reviews.length} ulasan", style: GoogleFonts.poppins(color: textGrey, fontSize: 12)),
+          ],
+        ),
+      ],
+    );
+  }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade100),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildSortChip(String label, String value) {
+    bool isSelected = _selectedSort == value;
+    return ChoiceChip(
+      label: Text(label, style: GoogleFonts.poppins(color: isSelected ? Colors.white : primaryNavy, fontSize: 12)),
+      selected: isSelected,
+      selectedColor: softOrangeDark,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: isSelected ? Colors.transparent : Colors.grey.shade300)),
+      onSelected: (bool selected) { if (selected) setState(() => _selectedSort = value); },
+    );
+  }
+
+  bool hasUserReviewed(List<Review> reviews, String username) {
+    if (username.isEmpty) return false;
+    return reviews.any((r) => r.reviewerName == username);
+  }
+
+  Widget _buildEmptyStateContent(CookieRequest request) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+      child: Column(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    avgRating.toStringAsFixed(1),
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: _headerBlue,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: List.generate(5, (index) {
-                          return Icon(
-                            index < avgRating.round() ? Icons.star : Icons.star_border,
-                            color: const Color(0xFFFFC107),
-                            size: 16,
-                          );
-                        }),
-                      ),
-                      Text(
-                        "dari ${reviews.length} ulasan",
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
+          const Icon(Icons.rate_review_outlined, size: 80, color: Colors.grey),
+          const SizedBox(height: 20),
+          Text("Belum ada review", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: primaryNavy)),
+          Text("Jadilah yang pertama mereview venue ini!", textAlign: TextAlign.center, style: GoogleFonts.poppins(color: textGrey)),
+          const SizedBox(height: 32),
+          _buildFirstReviewInput(request),
         ],
       ),
     );
   }
 
-  bool hasUserReviewed(List<Review> reviews, String username) {
-    return reviews.any((r) => r.reviewerName == username);
-  }
-
-  Widget _buildEmptyState(CookieRequest request) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 40),
-
-            Image.network(
-              _getStaticUrl("/static/img/no-reviews1.png"),
-              height: 120,
-              errorBuilder: (ctx, err, stack) => const Icon(
-                  Icons.rate_review,
-                  size: 80,
-                  color: Colors.grey
-              ),
+  Widget _buildFirstReviewInput(CookieRequest request) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Your Comment", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: primaryNavy)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _emptyCtrl,
+            maxLength: 150, maxLines: 3,
+            decoration: InputDecoration(hintText: "Write review...", filled: true, fillColor: backgroundGrey, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none)),
+          ),
+          Row(
+            children: [
+              Checkbox(activeColor: softOrangeDark, value: _emptyAnonymous, onChanged: (val) => setState(() => _emptyAnonymous = val ?? false)),
+              Text("Post as Anonymous", style: GoogleFonts.poppins(fontSize: 13)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity, height: 48,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: softOrangeDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              onPressed: _isSubmitting ? null : () async {
+                if (_emptyCtrl.text.trim().isEmpty) return;
+                setState(() => _isSubmitting = true);
+                await ReviewApi.createReview(request, widget.venueId, _emptyCtrl.text, _emptyAnonymous);
+                setState(() { _futureReviews = ReviewApi.getVenueReviews(request, widget.venueId); _isSubmitting = false; });
+              },
+              child: _isSubmitting ? const CircularProgressIndicator(color: Colors.white) : Text("Submit Review", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
-            const SizedBox(height: 20),
-
-            const Text("Belum ada review", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 8),
-            Text(
-              "Jadilah yang pertama mereview\n${widget.venueName}!",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 40),
-
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Your Comment", style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _emptyCtrl,
-              maxLength: 150,
-              maxLines: 5,
-              enabled: !_isSubmitting,
-              decoration: InputDecoration(
-                hintText: "Write your review here...",
-                hintStyle: TextStyle(color: Colors.grey.shade400),
-                filled: true,
-                fillColor: Colors.grey.shade200,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Checkbox(
-                  value: _emptyAnonymous,
-                  onChanged: _isSubmitting ? null : (val) => setState(() => _emptyAnonymous = val ?? false),
-                ),
-                const Text("Post as Anonymous"),
-              ],
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _submitGreen,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                onPressed: _isSubmitting ? null : () async { await _submitEmptyReview(request); },
-                child: _isSubmitting
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Submit First Review", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
-  }
-
-  Future<void> _submitEmptyReview(CookieRequest request) async {
-    if (_emptyCtrl.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Isi komentar dulu!")));
-      return;
-    }
-    setState(() => _isSubmitting = true);
-    try {
-      final res = await ReviewApi.createReview(request, widget.venueId, _emptyCtrl.text.trim(), _emptyAnonymous);
-      if (res["status"] == "success") {
-        setState(() {
-          _futureReviews = ReviewApi.getVenueReviews(request, widget.venueId);
-          _emptyCtrl.clear();
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Review berhasil ditambahkan!")));
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res["error"] ?? "Gagal")));
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
-    }
   }
 }

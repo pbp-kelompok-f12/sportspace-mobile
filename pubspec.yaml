@@ -67,6 +67,8 @@ flutter:
     - assets/images/orangemotif.png
     - assets/images/defaultprofile.png
     - assets/images/image.png
+    - assets/images/imagenotavail.png
+    - assets/images/banner.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

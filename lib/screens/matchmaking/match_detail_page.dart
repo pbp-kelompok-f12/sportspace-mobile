@@ -12,7 +12,7 @@ class MatchDetailPage extends StatefulWidget {
 }
 
 class _MatchDetailPageState extends State<MatchDetailPage> {
-  final String baseUrl = "http://10.0.2.2:8000";
+  final String baseUrl = "https://sean-marcello-sportspace.pbp.cs.ui.ac.id";
   late Future<MatchEntry> futureMatch;
 
   @override

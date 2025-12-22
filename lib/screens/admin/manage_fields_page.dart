@@ -110,7 +110,7 @@ class _ManageFieldsPageState extends State<ManageFieldsPage> {
   ImageProvider _getImageProvider(String? url) {
     // 1. Jika URL Kosong -> Pakai Default Asset
     if (url == null || url.isEmpty || url == "null") {
-      return const AssetImage("assets/images/defaultprofile.png");
+      return const AssetImage("assets/images/imagenotavail.png");
     }
     
     // 2. Jika URL Eksternal (http) -> Lewatkan Proxy Django
