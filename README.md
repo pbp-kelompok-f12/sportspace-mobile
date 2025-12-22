@@ -6,7 +6,7 @@
 Download aplikasi versi terbaru: https://app.bitrise.io/app/e26f991c-4d3e-4b22-944d-7869c8f2910a/installable-artifacts/b564e6c250595da9/public-install-page/63b7a1a10a7125a4358dd8e690058cf2
 
 
-apk v2: https://app.bitrise.io/app/85e2f193-3998-4ab7-bea0-a8e5cbd84eaf/installable-artifacts/f1ccc9ba66d27026/public-install-page/36ca2b966283088b5e4a3f10a430cc47
+aplikasi v2 : https://app.bitrise.io/app/85e2f193-3998-4ab7-bea0-a8e5cbd84eaf/installable-artifacts/8663c4a1f531ca0d/public-install-page/61d1592e3b4388ff8419a6275fbb51fb
 
 ![alt text](image.png)
 
