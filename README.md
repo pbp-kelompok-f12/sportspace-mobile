@@ -1,6 +1,7 @@
 # SportSpace
 
-[![Build Status](https://app.bitrise.io/app/e26f991c-4d3e-4b22-944d-7869c8f2910a/status.svg?token=ZORFj0_-OSsh8f1gFmfS0A&branch=main)](https://app.bitrise.io/app/e26f991c-4d3e-4b22-944d-7869c8f2910a)
+[![Build Status](https://app.bitrise.io/app/85e2f193-3998-4ab7-bea0-a8e5cbd84eaf/status.svg?token=ZLy6e9u9ZOMGO5IH8mfGTQ&branch=main)](https://app.bitrise.io/app/85e2f193-3998-4ab7-bea0-a8e5cbd84eaf)
+
 
 ## Download
 Download aplikasi versi terbaru: https://app.bitrise.io/app/e26f991c-4d3e-4b22-944d-7869c8f2910a/installable-artifacts/b564e6c250595da9/public-install-page/63b7a1a10a7125a4358dd8e690058cf2
