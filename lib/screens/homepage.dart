@@ -302,47 +302,47 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDynamicPaginator(int totalPages) {
-  if (totalPages <= 1) return const SizedBox.shrink();
-  List<Widget> pageButtons = [];
-  
-  // Tombol Panah Kiri (Icons.chevron_left)
-  pageButtons.add(_buildNavButton(
-    Icons.chevron_left, 
-    _currentPage > 1 ? () => _updatePage(_currentPage - 1) : null
-  ));
-  
-  if (totalPages <= 5) {
-    for (int i = 1; i <= totalPages; i++) pageButtons.add(_buildPageSquare(i));
-  } else {
-    if (_currentPage <= 3) {
-      for (int i = 1; i <= 4; i++) pageButtons.add(_buildPageSquare(i));
-      pageButtons.add(_buildPageSquare(totalPages, isEllipsis: true));
-    } else if (_currentPage >= totalPages - 2) {
-      pageButtons.add(_buildPageSquare(1, isEllipsis: true));
-      for (int i = totalPages - 3; i <= totalPages; i++) pageButtons.add(_buildPageSquare(i));
+    if (totalPages <= 1) return const SizedBox.shrink();
+    List<Widget> pageButtons = [];
+    
+    // Tombol Panah Kiri
+    pageButtons.add(_buildNavButton(
+      Icons.chevron_left, 
+      _currentPage > 1 ? () => _updatePage(_currentPage - 1) : null
+    ));
+    
+    if (totalPages <= 5) {
+      for (int i = 1; i <= totalPages; i++) pageButtons.add(_buildPageSquare(i));
     } else {
-      pageButtons.add(_buildPageSquare(1, isEllipsis: true));
-      pageButtons.add(_buildPageSquare(_currentPage - 1));
-      pageButtons.add(_buildPageSquare(_currentPage));
-      pageButtons.add(_buildPageSquare(_currentPage + 1));
-      pageButtons.add(_buildPageSquare(totalPages, isEllipsis: true));
+      if (_currentPage <= 3) {
+        for (int i = 1; i <= 4; i++) pageButtons.add(_buildPageSquare(i));
+        pageButtons.add(_buildPageSquare(totalPages, isEllipsis: true));
+      } else if (_currentPage >= totalPages - 2) {
+        pageButtons.add(_buildPageSquare(1, isEllipsis: true));
+        for (int i = totalPages - 3; i <= totalPages; i++) pageButtons.add(_buildPageSquare(i));
+      } else {
+        pageButtons.add(_buildPageSquare(1, isEllipsis: true));
+        pageButtons.add(_buildPageSquare(_currentPage - 1));
+        pageButtons.add(_buildPageSquare(_currentPage));
+        pageButtons.add(_buildPageSquare(_currentPage + 1));
+        pageButtons.add(_buildPageSquare(totalPages, isEllipsis: true));
+      }
     }
+
+    // Tombol Panah Kanan
+    pageButtons.add(_buildNavButton(
+      Icons.chevron_right, 
+      _currentPage < totalPages ? () => _updatePage(_currentPage + 1) : null
+    ));
+
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: pageButtons),
+      ],
+    );
   }
 
-  // Tombol Panah Kanan (Icons.chevron_right)
-  pageButtons.add(_buildNavButton(
-    Icons.chevron_right, 
-    _currentPage < totalPages ? () => _updatePage(_currentPage + 1) : null
-  ));
-
-  return Column(
-    children: [
-      const SizedBox(height: 20),
-      Row(mainAxisAlignment: MainAxisAlignment.center, children: pageButtons),
-      // ... (sisanya tetap sama)
-    ],
-  );
-}
   Widget _buildPageSquare(int pageNum, {bool isEllipsis = false}) {
     bool isSel = _currentPage == pageNum && !isEllipsis;
     return GestureDetector(
@@ -358,15 +358,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildNavButton(IconData icon, VoidCallback? onTap) {
-  return IconButton(
-    onPressed: onTap,
-    icon: Icon(
-      icon,
-      size: 24, // Ukuran icon yang standar
-      color: onTap == null ? Colors.grey[300] : primaryNavy,
-    ),
-  );
-}
+    return IconButton(
+      onPressed: onTap,
+      icon: Icon(
+        icon,
+        size: 24,
+        color: onTap == null ? Colors.grey[300] : primaryNavy,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -439,7 +439,6 @@ class RecommendedCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                // --- ICON LOCATION + ALAMAT ---
                 Row(
                   children: [
                     const Icon(Icons.location_on, color: Color.fromARGB(255, 34, 34, 34), size: 12),
@@ -559,7 +558,6 @@ class AllCourtCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(lapangan.nama, style: GoogleFonts.poppins(color: _HomePageState.primaryNavy, fontWeight: FontWeight.bold, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
-                // --- ICON LOCATION + ALAMAT ---
                 Row(
                   children: [
                     const Icon(Icons.location_on, color: _HomePageState.textGrey, size: 14),
@@ -636,7 +634,6 @@ class AllCourtCard extends StatelessWidget {
 
 ImageProvider getImageProvider(String? url) {
   if (url == null || url.isEmpty || url == "null") {
-    // Memberikan placeholder transparan agar errorBuilder yang bekerja
     return const NetworkImage("about:blank"); 
   }
   

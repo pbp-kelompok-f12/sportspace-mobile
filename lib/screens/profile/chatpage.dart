@@ -66,7 +66,6 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-  // === HELPER: IMAGE URL FIXER ===
   ImageProvider _getProfileImage(String? url) {
     if (url == null || url.isEmpty) {
       return const AssetImage("assets/images/defaultprofile.png");
@@ -77,7 +76,7 @@ class _ChatPageState extends State<ChatPage> {
     return NetworkImage("$baseUrl$url");
   }
 
-  // === API FETCH & SEND (Sama seperti sebelumnya) ===
+  // === API FETCH & SEND ===
   Future<void> fetchMessages() async {
     final request = context.read<CookieRequest>();
     try {
@@ -140,14 +139,13 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // === UI BUILDER ===
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgLight,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 1, // Beri sedikit shadow agar terpisah dari body
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryNavy),
           onPressed: () => Navigator.pop(context),
@@ -161,14 +159,111 @@ class _ChatPageState extends State<ChatPage> {
               backgroundImage: _getProfileImage(widget.friend.photoUrl),
             ),
             const SizedBox(width: 12),
+            Text(
+              widget.friend.username,
+              style: TextStyle(
+                  color: primaryNavy, fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+      // 1. SAFEAREA ditambahkan di body untuk mengatasi bentrok navigasi bar Android
+      body: SafeArea(
+        child: Column(
+          children: [
+            // === LIST PESAN ===
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // 2. REFRESHINDICATOR untuk Pull to Refresh
+              child: RefreshIndicator(
+                onRefresh: fetchMessages,
+                color: accentOrange,
+                child: isLoading
+                    ? Center(child: CircularProgressIndicator(color: accentOrange))
+                    : messages.isEmpty
+                        ? ListView( // Gunakan ListView agar area bisa ditarik untuk refresh meski kosong
+                            children: [
+                              SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                              Center(child: Text("Belum ada percakapan.", style: TextStyle(color: textGrey))),
+                            ],
+                          )
+                        : ListView.builder(
+                            controller: _scrollController,
+                            // Selalu aktifkan scroll agar pull to refresh bekerja meski item sedikit
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                            itemCount: messages.length,
+                            itemBuilder: (context, index) {
+                              final msg = messages[index];
+                              bool isMe = msg.sender != widget.friend.username;
+
+                              bool showDate = false;
+                              if (index == 0) {
+                                showDate = true;
+                              } else {
+                                final prevMsg = messages[index - 1];
+                                if (!_isSameDay(msg.timestamp, prevMsg.timestamp)) {
+                                  showDate = true;
+                                }
+                              }
+
+                              if (showDate) {
+                                return Column(
+                                  children: [
+                                    _buildDateSeparator(msg.timestamp),
+                                    _buildChatBubble(msg, isMe),
+                                  ],
+                                );
+                              } else {
+                                return _buildChatBubble(msg, isMe);
+                              }
+                            },
+                          ),
+              ),
+            ),
+
+            // === INPUT AREA ===
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(0, -4),
+                    blurRadius: 10,
+                  )
+                ],
+              ),
+              child: Row(
                 children: [
-                  Text(
-                    widget.friend.username,
-                    style: TextStyle(
-                        color: primaryNavy, fontWeight: FontWeight.bold, fontSize: 16),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: bgLight,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: TextField(
+                        controller: _messageController,
+                        decoration: const InputDecoration(
+                          hintText: "Tulis pesan...",
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          border: InputBorder.none,
+                        ),
+                        minLines: 1,
+                        maxLines: 3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  InkWell(
+                    onTap: sendMessage,
+                    borderRadius: BorderRadius.circular(50),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: accentOrange, shape: BoxShape.circle),
+                      child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                    ),
                   ),
                 ],
               ),
@@ -176,101 +271,11 @@ class _ChatPageState extends State<ChatPage> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          // === LIST PESAN ===
-          Expanded(
-            child: isLoading
-                ? Center(child: CircularProgressIndicator(color: accentOrange))
-                : messages.isEmpty
-                    ? Center(
-                        child: Text("Belum ada percakapan.", style: TextStyle(color: textGrey)),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          final msg = messages[index];
-                          bool isMe = msg.sender != widget.friend.username;
-
-                          // --- LOGIKA TANGGAL ---
-                          bool showDate = false;
-                          if (index == 0) {
-                            // Pesan pertama -> Tampilkan Tanggal
-                            showDate = true;
-                          } else {
-                            // Cek apakah tanggal pesan ini BEDA dengan pesan sebelumnya
-                            final prevMsg = messages[index - 1];
-                            if (!_isSameDay(msg.timestamp, prevMsg.timestamp)) {
-                              showDate = true;
-                            }
-                          }
-
-                          if (showDate) {
-                            return Column(
-                              children: [
-                                _buildDateSeparator(msg.timestamp),
-                                _buildChatBubble(msg, isMe),
-                              ],
-                            );
-                          } else {
-                            return _buildChatBubble(msg, isMe);
-                          }
-                        },
-                      ),
-          ),
-
-          // === INPUT AREA (Sama) ===
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), offset: const Offset(0, -4), blurRadius: 10)
-              ],
-            ),
-            child: Row(
-              children: [
-                // Icon(Icons.add_circle_outline_rounded, color: textGrey, size: 28),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: bgLight,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: "Tulis pesan...",
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        border: InputBorder.none,
-                      ),
-                      minLines: 1, maxLines: 3,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                InkWell(
-                  onTap: sendMessage,
-                  borderRadius: BorderRadius.circular(50),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: accentOrange, shape: BoxShape.circle),
-                    child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
-  // === WIDGET: DATE SEPARATOR ===
+  // === UI COMPONENTS & HELPERS ===
+
   Widget _buildDateSeparator(String timestamp) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -294,7 +299,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // === LOGIC: CEK APAKAH TANGGAL SAMA ===
   bool _isSameDay(String iso1, String iso2) {
     try {
       DateTime d1 = DateTime.parse(iso1).toLocal();
@@ -305,33 +309,19 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // === LOGIC: FORMAT TANGGAL HEADER ===
   String _formatDateHeader(String isoString) {
     try {
       DateTime dt = DateTime.parse(isoString).toLocal();
       DateTime now = DateTime.now();
-      
-      // Jika Hari Ini
-      if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
-        return "Hari Ini";
-      }
-      
-      // Jika Kemarin
+      if (dt.year == now.year && dt.month == now.month && dt.day == now.day) return "Hari Ini";
       DateTime yesterday = now.subtract(const Duration(days: 1));
-      if (dt.year == yesterday.year && dt.month == yesterday.month && dt.day == yesterday.day) {
-        return "Kemarin";
-      }
-
-      // Format Tanggal Biasa (dd MMM yyyy)
-      // Gunakan package intl untuk hasil lebih bagus: DateFormat("d MMM yyyy").format(dt)
-      // Ini versi manual sederhana:
+      if (dt.year == yesterday.year && dt.month == yesterday.month && dt.day == yesterday.day) return "Kemarin";
       return "${dt.day}/${dt.month}/${dt.year}";
     } catch (e) {
       return "-";
     }
   }
 
-  // === WIDGET: BUBBLE CHAT (Sama) ===
   Widget _buildChatBubble(ChatMessageItem msg, bool isMe) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,

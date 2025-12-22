@@ -228,6 +228,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
                       ],
                     ),
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Title

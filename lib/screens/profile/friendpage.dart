@@ -4,9 +4,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
 // === IMPORT MODEL ===
-// Pastikan path ini sesuai dengan struktur folder Anda
 import 'package:sportspace_app/models/friend_entry.dart';
-// import 'package:sportspace_app/models/friend_request.dart'; // Uncommented
 import 'package:sportspace_app/screens/profile/addfriendpage.dart';
 import 'package:sportspace_app/screens/profile/chatpage.dart';
 
@@ -56,52 +54,48 @@ class _FriendPageState extends State<FriendPage> {
     super.dispose();
   }
 
-  // === REFRESH DATA ===
-  void _refreshData(CookieRequest request) {
-    if (mounted) {
-      _fetchRequests(request);
-      _fetchFriendsManual(request);
-    }
+  // === REFRESH DATA (DIPANGGIL OLEH PULL TO REFRESH) ===
+  Future<void> _refreshData(CookieRequest request) async {
+    // Menjalankan fetch secara paralel
+    await Future.wait([
+      _fetchRequests(request),
+      _fetchFriendsManual(request),
+    ]);
   }
 
   // === FETCH REQUESTS ===
   Future<void> _fetchRequests(CookieRequest request) async {
     if (mounted) setState(() => _isLoadingRequests = true);
-
     try {
       final response = await request.get(
           'https://sean-marcello-sportspace.pbp.cs.ui.ac.id/accounts/friend-requests/');
 
       if (!mounted) return;
 
-      // SAFETY: Gunakan list kosong jika 'requests' null
       List<dynamic> listJson = response['requests'] ?? []; 
       setState(() {
-        _friendRequests =
-            listJson.map((d) => FriendRequest.fromJson(d)).toList();
+        _friendRequests = listJson.map((d) => FriendRequest.fromJson(d)).toList();
         _isLoadingRequests = false;
       });
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _friendRequests = [];
-        _isLoadingRequests = false;
-      });
-      print("Error fetching requests: $e");
+      if (mounted) {
+        setState(() {
+          _friendRequests = [];
+          _isLoadingRequests = false;
+        });
+      }
     }
   }
 
   // === FETCH FRIENDS ===
   Future<void> _fetchFriendsManual(CookieRequest request) async {
     if (mounted) setState(() => _isLoadingFriends = true);
-
     try {
       final response = await request.get(
           'https://sean-marcello-sportspace.pbp.cs.ui.ac.id/accounts/friends/');
 
       if (!mounted) return;
 
-      // SAFETY: Gunakan list kosong jika 'friends' null
       List<dynamic> listJson = response['friends'] ?? [];
       List<Friend> data = listJson.map((d) => Friend.fromJson(d)).toList();
 
@@ -110,18 +104,17 @@ class _FriendPageState extends State<FriendPage> {
         _filteredFriends = data;
         _isLoadingFriends = false;
       });
-      // Jalankan filter ulang jika ada text di search bar
       if (searchController.text.isNotEmpty) {
         _runFilter(searchController.text);
       }
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _allFriends = [];
-        _filteredFriends = [];
-        _isLoadingFriends = false;
-      });
-      print("Error fetching friends: $e");
+      if (mounted) {
+        setState(() {
+          _allFriends = [];
+          _filteredFriends = [];
+          _isLoadingFriends = false;
+        });
+      }
     }
   }
 
@@ -187,7 +180,6 @@ class _FriendPageState extends State<FriendPage> {
     }
   }
 
-  // === LOGIC: RESPOND REQUEST ===
   Future<bool> _respondRequest(
       FriendRequest req, bool isAccept, CookieRequest request) async {
     final action = isAccept ? "accept" : "reject";
@@ -216,7 +208,6 @@ class _FriendPageState extends State<FriendPage> {
     }
   }
 
-  // === SHOW MODAL ===
   void _showRequestsModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -317,209 +308,224 @@ class _FriendPageState extends State<FriendPage> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      body: CustomScrollView(
-        slivers: [
-          // 1. APP BAR
-          SliverAppBar(
-            expandedHeight: 100.0,
-            pinned: true,
-            backgroundColor: surfaceColor,
-            elevation: 0,
-            leadingWidth: 50,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_new_rounded,
-                  color: primaryNavy, size: 20),
-              onPressed: () => Navigator.pop(context),
+      body: RefreshIndicator(
+        onRefresh: () => _refreshData(request),
+        color: accentOrange,
+        backgroundColor: surfaceColor,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(), // Memastikan pull-to-refresh aktif meski list sedikit
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 100.0,
+              pinned: true,
+              backgroundColor: surfaceColor,
+              elevation: 0,
+              leadingWidth: 50,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: primaryNavy, size: 20),
+                onPressed: () => Navigator.pop(context),
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                titlePadding: const EdgeInsets.only(left: 60, bottom: 16),
+                expandedTitleScale: 1.5,
+                title: Text("Daftar Teman",
+                    style: GoogleFonts.poppins(
+                        color: primaryNavy,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20)),
+              ),
             ),
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 60, bottom: 16),
-              expandedTitleScale: 1.5,
-              title: Text("Daftar Teman",
-                  style: GoogleFonts.poppins(
-                      color: primaryNavy,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 20)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black.withOpacity(0.03),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4))
+                          ],
+                        ),
+                        child: TextField(
+                          controller: searchController,
+                          onChanged: (value) => _runFilter(value),
+                          decoration: InputDecoration(
+                            hintText: "Cari teman...",
+                            hintStyle: GoogleFonts.inter(
+                                color: textGrey.withOpacity(0.5)),
+                            prefixIcon: Icon(Icons.search,
+                                color: textGrey.withOpacity(0.5)),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (c) => const AddFriendPage()))
+                            .then((_) => _refreshData(request));
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        height: 50,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                              colors: [accentOrange, const Color(0xFFFB923C)]),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                                color: accentOrange.withOpacity(0.4),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4))
+                          ],
+                        ),
+                        child: const Icon(Icons.person_add_alt_1_rounded,
+                            color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-
-          // 2. SEARCH BAR & ADD BUTTON
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Row(
-                children: [
-                  Expanded(
+            if (!_isLoadingRequests && _friendRequests.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  child: InkWell(
+                    onTap: () => _showRequestsModal(context),
+                    borderRadius: BorderRadius.circular(16),
                     child: Container(
-                      height: 50,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: accentOrange.withOpacity(0.3)),
                         boxShadow: [
                           BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4))
-                        ],
-                      ),
-                      child: TextField(
-                        controller: searchController,
-                        onChanged: (value) => _runFilter(value),
-                        decoration: InputDecoration(
-                          hintText: "Cari teman...",
-                          hintStyle: GoogleFonts.inter(
-                              color: textGrey.withOpacity(0.5)),
-                          prefixIcon: Icon(Icons.search,
-                              color: textGrey.withOpacity(0.5)),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // TOMBOL ADD FRIEND (Pengganti FAB, Aman dari Hero Error)
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (c) => const AddFriendPage()))
-                          .then((_) => _refreshData(request));
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                            colors: [accentOrange, const Color(0xFFFB923C)]),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                              color: accentOrange.withOpacity(0.4),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4))
-                        ],
-                      ),
-                      child: const Icon(Icons.person_add_alt_1_rounded,
-                          color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // 3. REQUEST NOTIFICATION BANNER
-          if (!_isLoadingRequests && _friendRequests.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: InkWell(
-                  onTap: () => _showRequestsModal(context),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: accentOrange.withOpacity(0.3)),
-                      boxShadow: [
-                        BoxShadow(
-                            color: accentOrange.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2))
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
                               color: accentOrange.withOpacity(0.1),
-                              shape: BoxShape.circle),
-                          child: Icon(Icons.notifications_active_rounded,
-                              color: accentOrange, size: 20),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("Permintaan Pertemanan",
-                                  style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.bold,
-                                      color: textDark)),
-                              Text(
-                                  "Kamu memiliki ${_friendRequests.length} permintaan baru",
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12, color: textGrey)),
-                            ],
+                              blurRadius: 8,
+                              offset: const Offset(0, 2))
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                                color: accentOrange.withOpacity(0.1),
+                                shape: BoxShape.circle),
+                            child: Icon(Icons.notifications_active_rounded,
+                                color: accentOrange, size: 20),
                           ),
-                        ),
-                        Icon(Icons.arrow_forward_ios_rounded,
-                            size: 16, color: textGrey),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Permintaan Pertemanan",
+                                    style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.bold,
+                                        color: textDark)),
+                                Text(
+                                    "Kamu memiliki ${_friendRequests.length} permintaan baru",
+                                    style: GoogleFonts.inter(
+                                        fontSize: 12, color: textGrey)),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios_rounded,
+                              size: 16, color: textGrey),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-
-          // 4. TITLE "All Friends"
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-              child: Row(
-                children: [
-                  Text("Teman Saya",
-                      style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: primaryNavy)),
-                  const SizedBox(width: 6),
-                  if (!_isLoadingFriends)
-                    Text("(${_allFriends.length})",
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                child: Row(
+                  children: [
+                    Text("Teman Saya",
                         style: GoogleFonts.poppins(
                             fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: textGrey)),
-                ],
+                            fontWeight: FontWeight.bold,
+                            color: primaryNavy)),
+                    const SizedBox(width: 6),
+                    if (!_isLoadingFriends)
+                      Text("(${_allFriends.length})",
+                          style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: textGrey)),
+                  ],
+                ),
               ),
             ),
-          ),
-
-          // 5. FRIENDS LIST
-          if (_isLoadingFriends)
-            const SliverToBoxAdapter(
-                child: Center(
-                    child: Padding(
-                        padding: EdgeInsets.all(30),
-                        child: CircularProgressIndicator())))
-          else if (_filteredFriends.isEmpty)
-            SliverToBoxAdapter(
-                child: _buildEmptyState(
-                    message: searchController.text.isNotEmpty
-                        ? "Tidak ditemukan"
-                        : "Belum ada teman"))
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) =>
-                    _buildModernFriendCard(_filteredFriends[index]),
-                childCount: _filteredFriends.length,
+            if (_isLoadingFriends)
+              const SliverToBoxAdapter(
+                  child: Center(
+                      child: Padding(
+                          padding: EdgeInsets.all(30),
+                          child: CircularProgressIndicator())))
+            else if (_filteredFriends.isEmpty)
+              SliverToBoxAdapter(
+                  child: _buildEmptyState(
+                      message: searchController.text.isNotEmpty
+                          ? "Tidak ditemukan"
+                          : "Belum ada teman"))
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) =>
+                      _buildModernFriendCard(_filteredFriends[index]),
+                  childCount: _filteredFriends.length,
+                ),
               ),
-            ),
-
-          const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
-        ],
+            const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
+          ],
+        ),
       ),
     );
   }
 
   // === HELPER UI ===
+
+  Widget _buildAvatar(String url, double radius) {
+    return ClipOval(
+      child: Image.network(
+        url,
+        width: radius * 2,
+        height: radius * 2,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          // Jika gagal memuat gambar (404, invalid URL, dll), gunakan placeholder
+          return Image.asset(
+            "assets/images/defaultprofile.png",
+            width: radius * 2,
+            height: radius * 2,
+            fit: BoxFit.cover,
+          );
+        },
+      ),
+    );
+  }
 
   Widget _buildRequestCard(FriendRequest req, Function(bool) onRespond) {
     return Container(
@@ -534,14 +540,7 @@ class _FriendPageState extends State<FriendPage> {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: bgColor,
-                backgroundImage: (req.fromUser.photoUrl.isNotEmpty)
-                    ? NetworkImage(req.fromUser.photoUrl)
-                    : const AssetImage("assets/images/defaultprofile.png")
-                        as ImageProvider,
-              ),
+              _buildAvatar(req.fromUser.photoUrl, 24),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -615,17 +614,9 @@ class _FriendPageState extends State<FriendPage> {
       ),
       child: Row(
         children: [
-          // Navigasi ke Chat dengan animasi Hero (Opsional)
           GestureDetector(
              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => ChatPage(friend: friend))),
-             child: CircleAvatar(
-              radius: 26,
-              backgroundImage: (friend.photoUrl.isNotEmpty &&
-                      !friend.photoUrl.contains("/static/"))
-                  ? NetworkImage(friend.photoUrl)
-                  : const AssetImage("assets/images/defaultprofile.png")
-                      as ImageProvider,
-            ),
+             child: _buildAvatar(friend.photoUrl, 26),
           ),
           const SizedBox(width: 16),
           Expanded(

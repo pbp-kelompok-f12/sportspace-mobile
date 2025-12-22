@@ -142,6 +142,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 // 4. IntrinsicHeight: Agar widget seperti Spacer() atau Expanded tetap bekerja
                 child: IntrinsicHeight(
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // --- BAGIAN ATAS: MOTIF & LOGO ---
                       SlideTransition(
@@ -239,13 +240,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                           style: GoogleFonts.poppins( // <-- MENGGUNAKAN GOOGLE FONTS
                                             fontSize: 30, // Ukuran sedikit diperbesar agar lebih impact
                                             fontWeight: FontWeight.w600, // Paling Tebal (Black)
-                                            color:  Color(0xFF0C2D57),
+                                            color: const Color(0xFF0C2D57),
                                             letterSpacing: -1.0, // Sedikit dirapatkan agar terlihat solid
                                             height: 1.5,
                                           ),
                                         ),
-                                        SizedBox(height: 8),
-                                        Text(
+                                        const SizedBox(height: 8),
+                                        const Text(
                                           "Please sign in to continue",
                                           style: TextStyle(
                                             fontSize: 14,
