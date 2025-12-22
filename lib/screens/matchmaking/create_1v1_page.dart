@@ -19,7 +19,6 @@ class _Create1v1PageState extends State<Create1v1Page> {
 
   // Warna Palette
   static const Color primaryNavy = Color(0xFF0D2C3E);
-  static const Color softOrange = Color(0xFFFF9F45);
 
   Future<void> _handleCreateMatch(CookieRequest request) async {
     setState(() {
