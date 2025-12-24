@@ -101,9 +101,9 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                     return const Center(child: CircularProgressIndicator(color: softOrangeDark));
                   }
                   
-                  if (snapshot.hasError && _cachedData == null) {
-                    return Center(child: Text("Gagal memuat profil", style: GoogleFonts.poppins(color: Colors.red)));
-                  }
+                  // if (snapshot.hasError && _cachedData == null) {
+                  //   return Center(child: Text("Gagal memuat profil", style: GoogleFonts.poppins(color: Colors.red)));
+                  // }
 
                   // Gunakan data dari snapshot jika ada, jika tidak gunakan cache
                   final data = snapshot.data ?? _cachedData;
