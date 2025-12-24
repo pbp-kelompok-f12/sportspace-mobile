@@ -5,7 +5,6 @@ import 'package:sportspace_app/screens/auth/register.dart';
 import 'package:sportspace_app/widgets/base_background.dart';
 import 'package:flutter/gestures.dart';
 import 'package:sportspace_app/screens/homepage.dart';
-// import 'package:sportspace_app/widgets/error_dialog.dart'; // Hapus ini karena tidak dipakai lagi
 import 'package:sportspace_app/screens/admin/dashboard_admin_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 class LoginPage extends StatefulWidget {
@@ -622,9 +621,9 @@ Widget _buildModernTextField({
             ),
             child: Center(
               child: isLoading
-                  ? Row(
+                  ? const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         SizedBox(
                           height: 24,
                           width: 24,

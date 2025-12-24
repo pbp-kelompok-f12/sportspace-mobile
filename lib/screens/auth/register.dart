@@ -6,7 +6,6 @@ import 'package:sportspace_app/widgets/base_background.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
-// import 'package:sportspace_app/widgets/error_dialog.dart'; // Tidak diperlukan lagi
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -681,9 +680,9 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
             ),
             child: Center(
               child: isLoading
-                  ? Row(
+                  ? const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         SizedBox(
                           height: 24,
                           width: 24,
